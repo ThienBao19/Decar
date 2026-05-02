@@ -24,3 +24,11 @@ Thumbs.db
 .vscode
 .idea
 *.swp
+
+# Claude Code — local agent config (never push)
+.claude/
+
+# Markdown rule/design docs — local only
+*.md
+!apps/web/src/**/*.md
+!packages/**/*.md
