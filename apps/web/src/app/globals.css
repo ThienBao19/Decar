@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Supabase-inspired design tokens ───────────────────────── */
+@layer base {
+  :root {
+    /* Surfaces */
+    --surface:      #171717;
+    --surface-dark: #0f0f0f;
+    --surface-card: #1c1c1c;
+
+    /* Brand green */
+    --green:        #3ecf8e;
+    --green-link:   #00c573;
+    --green-border: rgba(62, 207, 142, 0.30);
+    --green-glow:   rgba(62, 207, 142, 0.15);
+
+    /* Borders */
+    --border-subtle:   #242424;
+    --border:          #2e2e2e;
+    --border-strong:   #363636;
+
+    /* Text */
+    --text-primary:   #fafafa;
+    --text-secondary: #b4b4b4;
+    --text-muted:     #898989;
+
+    /* Border radius */
+    --radius-sm:   6px;
+    --radius-md:   8px;
+    --radius-lg:   16px;
+    --radius-pill: 9999px;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background-color: #171717;
+    color: #fafafa;
+  }
+
+  body {
+    background-color: #171717;
+    color: #fafafa;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent horizontal scroll caused by 3D transforms */
+    overflow-x: hidden;
+  }
+
+  /* Selection colour uses brand green */
+  ::selection {
+    background-color: rgba(62, 207, 142, 0.25);
+    color: #fafafa;
+  }
+
+  /* Scrollbar (Webkit) */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track { background: #171717; }
+  ::-webkit-scrollbar-thumb {
+    background: #363636;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: #4d4d4d; }
+}
+
+/* ── G63 360° turntable ─────────────────────────────────────── */
+@layer utilities {
+  /* Glow ring beneath the car */
+  .g63-platform-glow {
+    background: radial-gradient(ellipse 70% 20px at center, rgba(62, 207, 142, 0.18) 0%, transparent 70%);
+  }
+
+  /* Headlight glow animation */
+  @keyframes headlight-pulse {
+    0%, 100% { filter: drop-shadow(0 0 6px rgba(62, 207, 142, 0.5)); }
+    50%       { filter: drop-shadow(0 0 14px rgba(62, 207, 142, 0.9)); }
+  }
+
+  .g63-headlight { animation: headlight-pulse 2.5s ease-in-out infinite; }
+
+  /* Scan line overlay for tech feel */
+  @keyframes scan {
+    0%   { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+
+  .g63-scan::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 40%,
+      rgba(62, 207, 142, 0.03) 50%,
+      transparent 60%
+    );
+    animation: scan 4s linear infinite;
+    pointer-events: none;
+  }
+
+  /* Subtle grid background for hero */
+  .hero-grid {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+}
