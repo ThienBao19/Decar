@@ -1,4 +1,11 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
+
+// Extend FastifyContextConfig to allow rawBody flag for webhook route
+declare module 'fastify' {
+  interface FastifyContextConfig {
+    rawBody?: boolean
+  }
+}
 import Stripe from 'stripe'
 import { requireAuth } from '../../middleware/requireAuth.js'
 import {

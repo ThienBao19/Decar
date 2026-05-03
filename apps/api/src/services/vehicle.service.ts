@@ -1,5 +1,5 @@
 import type { PrismaClient } from '@prisma/client'
-import type Redis from 'ioredis'
+import type { Redis } from 'ioredis'
 import type { VehicleDetailDTO, VehicleListItemDTO, SubscriptionTier } from '@decar/shared'
 
 const CACHE_TTL = 3600 // 1 hour

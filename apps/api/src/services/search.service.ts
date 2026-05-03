@@ -1,5 +1,5 @@
 import type { Client } from '@elastic/elasticsearch'
-import type Redis from 'ioredis'
+import type { Redis } from 'ioredis'
 import { createHash } from 'crypto'
 import type { VehicleSearchParams, VehicleListItemDTO, PaginatedResult } from '@decar/shared'
 

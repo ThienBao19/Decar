@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { PrismaClient } from '@prisma/client'
-import type Redis from 'ioredis'
+import type { Redis } from 'ioredis'
 import Stripe from 'stripe'
 import { handleWebhookEvent } from './subscription.service.js'
 

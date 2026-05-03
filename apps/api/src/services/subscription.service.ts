@@ -1,6 +1,6 @@
 import Stripe from 'stripe'
 import type { PrismaClient } from '@prisma/client'
-import type Redis from 'ioredis'
+import type { Redis } from 'ioredis'
 
 export function getStripe(): Stripe {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' })
@@ -27,8 +27,8 @@ export async function createCheckoutSession(
   if (customerId.startsWith('pending_')) {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true } })
     const customer = await stripe.customers.create({
-      email: user?.email,
-      name: user?.name ?? undefined,
+      ...(user?.email ? { email: user.email } : {}),
+      ...(user?.name ? { name: user.name } : {}),
       metadata: { userId },
     })
     customerId = customer.id

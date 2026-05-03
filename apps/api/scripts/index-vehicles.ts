@@ -1,26 +1,29 @@
 import { PrismaClient } from '@prisma/client'
 import { Client as EsClient } from '@elastic/elasticsearch'
+import type { estypes } from '@elastic/elasticsearch'
 
 const prisma = new PrismaClient()
 const es = new EsClient({ node: process.env.ELASTICSEARCH_URL ?? 'http://localhost:9200' })
 
 const INDEX_NAME = 'vehicles'
 
+// `satisfies` gives strict type checking without putting a typed identifier before `=`
+// (avoids the implicit_global lint false-positive on inline type annotations)
 const mappings = {
   properties: {
-    id: { type: 'keyword' },
-    slug: { type: 'keyword' },
-    make: { type: 'keyword' },
-    model: { type: 'keyword' },
-    year: { type: 'integer' },
-    market: { type: 'keyword' },
+    id:        { type: 'keyword' },
+    slug:      { type: 'keyword' },
+    make:      { type: 'keyword' },
+    model:     { type: 'keyword' },
+    year:      { type: 'integer' },
+    market:    { type: 'keyword' },
     trimLevel: { type: 'keyword' },
-    bodyType: { type: 'keyword' },
-    fuelType: { type: 'keyword' },
-    // Full-text search fields
+    bodyType:  { type: 'keyword' },
+    fuelType:  { type: 'keyword' },
+    // Full-text — supports partial search on "Toyota Camry" etc.
     makeModel: { type: 'text', analyzer: 'standard' },
   },
-}
+} satisfies estypes.MappingTypeMapping
 
 async function main() {
   // Create or recreate index
@@ -44,8 +47,8 @@ async function main() {
     },
   })
 
-  if (vehicles.length === 0) {
-    console.log('No vehicles to index. Run seed first.')
+  if (!vehicles.length) {
+    console.log('No vehicles to index — run seed first.')
     return
   }
 

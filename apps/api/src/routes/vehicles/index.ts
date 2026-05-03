@@ -24,15 +24,16 @@ export async function vehicleRoutes(app: FastifyInstance) {
 
       // Try Elasticsearch first; fall back to DB list on ES failure
       try {
+        // Build params without undefined values — exactOptionalPropertyTypes disallows key: undefined
         const result = await searchVehicles(getEs(), app.redis, {
-          make: query['make'],
-          model: query['model'],
-          year: query['year'] ? Number(query['year']) : undefined,
-          fuelType: query['fuelType'] as never,
-          bodyType: query['bodyType'],
-          market: query['market'],
           page: query['page'] ? Number(query['page']) : 1,
           limit: query['limit'] ? Number(query['limit']) : 24,
+          ...(query['make'] ? { make: query['make'] } : {}),
+          ...(query['model'] ? { model: query['model'] } : {}),
+          ...(query['year'] ? { year: Number(query['year']) } : {}),
+          ...(query['fuelType'] ? { fuelType: query['fuelType'] as never } : {}),
+          ...(query['bodyType'] ? { bodyType: query['bodyType'] } : {}),
+          ...(query['market'] ? { market: query['market'] } : {}),
         })
         return reply.status(200).send({ data: result.data, total: result.total })
       } catch {
