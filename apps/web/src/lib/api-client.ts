@@ -27,8 +27,8 @@ class ApiClient {
       })
 
       if (tokenRes.ok) {
-        const { accessToken } = (await tokenRes.json()) as { accessToken: string }
-        headers['Authorization'] = `Bearer ${accessToken}`
+        const json = (await tokenRes.json()) as { data: { accessToken: string } }
+        headers['Authorization'] = `Bearer ${json.data.accessToken}`
       }
     }
 
@@ -62,8 +62,8 @@ class ApiClient {
       })
 
       if (tokenRes.ok) {
-        const { accessToken } = (await tokenRes.json()) as { accessToken: string }
-        headers['Authorization'] = `Bearer ${accessToken}`
+        const json = (await tokenRes.json()) as { data: { accessToken: string } }
+        headers['Authorization'] = `Bearer ${json.data.accessToken}`
       }
     }
 

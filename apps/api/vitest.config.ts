@@ -8,7 +8,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      include: ['src/services/**'],
+      include: ['src/services/**', 'src/middleware/**', 'src/routes/**'],
       thresholds: { lines: 80, functions: 80 },
     },
   },

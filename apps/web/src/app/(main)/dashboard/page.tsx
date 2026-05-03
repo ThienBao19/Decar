@@ -15,48 +15,87 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-12">
-      <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+      <h1 className="text-[28px] font-semibold tracking-tight text-[#fafafa]">Dashboard</h1>
+      <p className="mt-1 text-[14px] text-[#898989]">Manage your account and subscription.</p>
 
-      <div className="mt-8 rounded-xl border border-gray-100 p-6 shadow-sm">
+      {/* Profile card */}
+      <div className="mt-8 rounded-xl border border-[#2e2e2e] bg-[#1c1c1c] p-6">
         <div className="flex items-center gap-4">
-          {session.user?.image && (
+          {session.user?.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={session.user.image}
               alt={session.user.name ?? 'Avatar'}
-              className="h-12 w-12 rounded-full"
+              className="h-11 w-11 rounded-full ring-2 ring-[#2e2e2e]"
             />
+          ) : (
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#242424] text-[16px] font-semibold text-[#b4b4b4]">
+              {(user.name ?? user.email ?? 'U')[0]?.toUpperCase()}
+            </div>
           )}
-          <div>
-            <p className="font-semibold text-gray-900">{user.name ?? 'User'}</p>
-            <p className="text-sm text-gray-500">{user.email}</p>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[15px] font-medium text-[#fafafa]">{user.name ?? 'User'}</p>
+            <p className="truncate text-[13px] text-[#898989]">{user.email}</p>
           </div>
           <span
-            className={`ml-auto rounded-full px-3 py-1 text-sm font-medium ${
+            className={`shrink-0 rounded-[9999px] px-3 py-1 text-[12px] font-medium ${
               user.subscription.tier === 'PRO'
-                ? 'bg-brand-100 text-brand-700'
-                : 'bg-gray-100 text-gray-600'
+                ? 'border border-[#3ecf8e]/40 bg-[#3ecf8e]/10 text-[#3ecf8e]'
+                : 'border border-[#2e2e2e] bg-[#242424] text-[#898989]'
             }`}
           >
             {user.subscription.tier}
           </span>
         </div>
+
+        {user.subscription.tier === 'PRO' && user.subscription.currentPeriodEnd && (
+          <p className="mt-4 border-t border-[#242424] pt-4 text-[13px] text-[#4d4d4d]">
+            Pro plan renews{' '}
+            <span className="text-[#898989]">
+              {new Date(user.subscription.currentPeriodEnd).toLocaleDateString('en-US', {
+                month: 'long', day: 'numeric', year: 'numeric',
+              })}
+            </span>
+          </p>
+        )}
       </div>
 
+      {/* Upgrade CTA (FREE only) */}
       {user.subscription.tier === 'FREE' && (
-        <div className="mt-6 rounded-xl bg-brand-50 p-6">
-          <p className="font-semibold text-brand-900">Upgrade to Pro</p>
-          <p className="mt-1 text-sm text-brand-700">
-            Unlock 3D viewer, unlimited comparisons, PDF export, and more.
-          </p>
-          <a
-            href="/pricing"
-            className="mt-4 inline-block rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700"
-          >
-            View plans
-          </a>
+        <div className="mt-5 rounded-xl border border-[#3ecf8e]/20 bg-[#3ecf8e]/5 p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[15px] font-semibold text-[#fafafa]">Upgrade to Pro</p>
+              <p className="mt-1 text-[13px] text-[#898989]">
+                Unlock 3D viewer, unlimited comparisons, PDF export, and full API access.
+              </p>
+            </div>
+            <a
+              href="/pricing"
+              className="shrink-0 rounded-[9999px] bg-[#3ecf8e] px-5 py-2 text-[13px] font-medium text-[#0f0f0f] transition-opacity hover:opacity-90"
+            >
+              View plans
+            </a>
+          </div>
         </div>
       )}
+
+      {/* Quick links */}
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {[
+          { label: 'Browse Vehicles', href: '/vehicles' },
+          { label: 'Comparisons', href: '/comparisons' },
+          { label: 'Pricing', href: '/pricing' },
+        ].map((link) => (
+          <a
+            key={link.href}
+            href={link.href}
+            className="rounded-lg border border-[#242424] bg-[#1c1c1c] px-4 py-3 text-[13px] font-medium text-[#b4b4b4] transition-colors hover:border-[#2e2e2e] hover:text-[#fafafa]"
+          >
+            {link.label}
+          </a>
+        ))}
+      </div>
     </div>
   )
 }
