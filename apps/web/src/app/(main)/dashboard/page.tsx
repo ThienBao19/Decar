@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { authOptions } from '@/lib/auth'
 import { apiClient } from '@/lib/api-client'
 import type { UserDTO } from '@decar/shared'
+import { PortalButton } from '@/components/billing/PortalButton'
 
 export const metadata: Metadata = { title: 'Dashboard' }
 
@@ -48,15 +49,22 @@ export default async function DashboardPage() {
           </span>
         </div>
 
-        {user.subscription.tier === 'PRO' && user.subscription.currentPeriodEnd && (
-          <p className="mt-4 border-t border-[#242424] pt-4 text-[13px] text-[#4d4d4d]">
-            Pro plan renews{' '}
-            <span className="text-[#898989]">
-              {new Date(user.subscription.currentPeriodEnd).toLocaleDateString('en-US', {
-                month: 'long', day: 'numeric', year: 'numeric',
-              })}
-            </span>
-          </p>
+        {user.subscription.tier === 'PRO' && (
+          <div className="mt-4 flex items-center justify-between border-t border-[#242424] pt-4">
+            {user.subscription.currentPeriodEnd ? (
+              <p className="text-[13px] text-[#4d4d4d]">
+                Pro plan renews{' '}
+                <span className="text-[#898989]">
+                  {new Date(user.subscription.currentPeriodEnd).toLocaleDateString('en-US', {
+                    month: 'long', day: 'numeric', year: 'numeric',
+                  })}
+                </span>
+              </p>
+            ) : (
+              <span />
+            )}
+            <PortalButton />
+          </div>
         )}
       </div>
 
