@@ -19,13 +19,13 @@ export function ComparisonTable({ vehicleA, vehicleB }: Props) {
     },
     {
       label: 'Power',
-      a: vehicleA.engine ? `${vehicleA.engine.powerKw} kW` : '—',
-      b: vehicleB.engine ? `${vehicleB.engine.powerKw} kW` : '—',
+      a: vehicleA.engine?.powerKw ? `${vehicleA.engine.powerKw} kW` : '—',
+      b: vehicleB.engine?.powerKw ? `${vehicleB.engine.powerKw} kW` : '—',
     },
     {
       label: 'Torque',
-      a: vehicleA.engine ? `${vehicleA.engine.torqueNm} Nm` : '—',
-      b: vehicleB.engine ? `${vehicleB.engine.torqueNm} Nm` : '—',
+      a: vehicleA.engine?.torqueNm ? `${vehicleA.engine.torqueNm} Nm` : '—',
+      b: vehicleB.engine?.torqueNm ? `${vehicleB.engine.torqueNm} Nm` : '—',
     },
     {
       label: 'Body',
@@ -40,27 +40,27 @@ export function ComparisonTable({ vehicleA, vehicleB }: Props) {
   ]
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-100">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto rounded-xl border border-[#2e2e2e]">
+      <table className="w-full text-[13px]">
         <thead>
-          <tr className="border-b border-gray-100 bg-gray-50">
-            <th className="py-3 pl-4 text-left text-xs font-medium uppercase text-gray-400">
+          <tr className="border-b border-[#242424] bg-[#1c1c1c]">
+            <th className="py-3 pl-4 text-left text-[11px] font-medium uppercase tracking-widest text-[#4d4d4d]">
               Spec
             </th>
-            <th className="py-3 px-4 text-center text-xs font-medium uppercase text-gray-400">
+            <th className="px-4 py-3 text-center text-[11px] font-medium uppercase tracking-widest text-[#4d4d4d]">
               {vehicleA.year} {vehicleA.make} {vehicleA.model}
             </th>
-            <th className="py-3 px-4 text-center text-xs font-medium uppercase text-gray-400">
+            <th className="px-4 py-3 text-center text-[11px] font-medium uppercase tracking-widest text-[#4d4d4d]">
               {vehicleB.year} {vehicleB.make} {vehicleB.model}
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">
+        <tbody className="divide-y divide-[#242424] bg-[#171717]">
           {rows.map(({ label, a, b }) => (
-            <tr key={label} className="hover:bg-gray-50">
-              <td className="py-3 pl-4 font-medium text-gray-600">{label}</td>
-              <td className="py-3 px-4 text-center text-gray-900">{a}</td>
-              <td className="py-3 px-4 text-center text-gray-900">{b}</td>
+            <tr key={label} className="transition-colors hover:bg-[#1c1c1c]">
+              <td className="py-3 pl-4 font-medium text-[#898989]">{label}</td>
+              <td className="px-4 py-3 text-center text-[#fafafa]">{a}</td>
+              <td className="px-4 py-3 text-center text-[#fafafa]">{b}</td>
             </tr>
           ))}
         </tbody>
