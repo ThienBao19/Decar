@@ -4,6 +4,7 @@ import { requireAuth } from '../../middleware/requireAuth.js'
 import { getVehicle, listVehicles } from '../../services/vehicle.service.js'
 import { searchVehicles } from '../../services/search.service.js'
 import { getVehicleMedia } from '../../services/media.service.js'
+import { exportRoutes } from './export.js'
 import type { MediaType } from '@decar/shared'
 
 let esClient: EsClient | null = null
@@ -104,4 +105,7 @@ export async function vehicleRoutes(app: FastifyInstance) {
       }
     },
   })
+
+  // Sub-router: GET /vehicles/:id/export/pdf
+  await app.register(exportRoutes)
 }

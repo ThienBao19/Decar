@@ -1,9 +1,28 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import type { SignedMediaResponse } from '@decar/shared'
+
+// TypeScript declaration for the <model-viewer> web component (Google)
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'model-viewer': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        src?: string
+        'camera-controls'?: string
+        'auto-rotate'?: string
+        'shadow-intensity'?: string
+        exposure?: string
+        ar?: string
+        alt?: string
+      }
+    }
+  }
+}
 
 interface Props {
   vehicleId: string
+  /** Pre-fetched GLB URL — overrides self-fetch when provided. */
   modelUrl?: string
 }
 
@@ -42,24 +61,53 @@ function EngineWireframe({ animated }: { animated: boolean }) {
   )
 }
 
-export function Engine3DViewer({ vehicleId, modelUrl }: Props) {
+export function Engine3DViewer({ vehicleId, modelUrl: initialModelUrl }: Props) {
   const canvasRef = useRef<HTMLDivElement>(null)
   const [angle, setAngle] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
+  const [resolvedModelUrl, setResolvedModelUrl] = useState<string | null>(initialModelUrl ?? null)
+  const [modelViewerReady, setModelViewerReady] = useState(false)
   const startXRef = useRef(0)
   const startAngleRef = useRef(0)
   const rafRef = useRef<number>(0)
 
-  // Auto-rotate when not dragging
+  // Self-fetch GLB URL if not pre-provided
   useEffect(() => {
-    if (isDragging) return
+    if (initialModelUrl || resolvedModelUrl) return
+    fetch(`/api/media?vehicleId=${encodeURIComponent(vehicleId)}&type=ENGINE_3D`)
+      .then((r) => r.json())
+      .then((json: { data?: SignedMediaResponse[] }) => {
+        const url = json.data?.[0]?.url
+        if (url) setResolvedModelUrl(url)
+      })
+      .catch(() => undefined)
+  }, [vehicleId, initialModelUrl, resolvedModelUrl])
+
+  // Load @google/model-viewer from CDN when a GLB URL is ready
+  useEffect(() => {
+    if (!resolvedModelUrl) return
+    if (document.querySelector('script[data-model-viewer]')) {
+      setModelViewerReady(true)
+      return
+    }
+    const script = document.createElement('script')
+    script.type = 'module'
+    script.src = 'https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js'
+    script.dataset.modelViewer = 'true'
+    script.onload = () => setModelViewerReady(true)
+    document.head.appendChild(script)
+  }, [resolvedModelUrl])
+
+  // Auto-rotate the SVG wireframe when no GLB is loaded
+  useEffect(() => {
+    if (resolvedModelUrl || isDragging) return
     const step = () => {
       setAngle((prev) => (prev + 0.4) % 360)
       rafRef.current = requestAnimationFrame(step)
     }
     rafRef.current = requestAnimationFrame(step)
     return () => cancelAnimationFrame(rafRef.current)
-  }, [isDragging])
+  }, [isDragging, resolvedModelUrl])
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true)
@@ -80,6 +128,29 @@ export function Engine3DViewer({ vehicleId, modelUrl }: Props) {
   const scaleX = Math.abs(cosA)
   const flipX = cosA < 0
 
+  // — Real 3D model via <model-viewer> —
+  if (resolvedModelUrl && modelViewerReady) {
+    return (
+      <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-[#2e2e2e] bg-[#0f0f0f]">
+        <model-viewer
+          src={resolvedModelUrl}
+          camera-controls=""
+          auto-rotate=""
+          shadow-intensity="1"
+          exposure="0.8"
+          alt={`3D engine model`}
+          style={{ width: '100%', height: '100%' }}
+        />
+        <div className="pointer-events-none absolute right-3 top-3">
+          <span className="rounded-full border border-[#3ecf8e]/30 bg-[#3ecf8e]/10 px-2 py-0.5 text-[10px] font-medium text-[#3ecf8e]">
+            PRO · 3D
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  // — SVG wireframe fallback —
   return (
     <div
       ref={canvasRef}
@@ -103,7 +174,7 @@ export function Engine3DViewer({ vehicleId, modelUrl }: Props) {
       {/* Drag hint */}
       <div className="pointer-events-none absolute bottom-3 left-0 right-0 flex justify-center">
         <span className="rounded-full border border-[#2e2e2e] bg-[#0f0f0f]/80 px-3 py-1 text-[11px] text-[#4d4d4d]">
-          drag to rotate
+          {resolvedModelUrl ? 'Loading 3D model…' : 'drag to rotate'}
         </span>
       </div>
 

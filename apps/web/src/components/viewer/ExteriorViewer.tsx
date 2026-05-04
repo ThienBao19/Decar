@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import type { SignedMediaResponse } from '@decar/shared'
 
 interface Props {
   vehicleId: string
+  /** Pre-fetched image URLs — overrides self-fetch when provided. */
   imageUrls?: string[]
 }
 
@@ -67,12 +69,25 @@ function VehicleSilhouette() {
   )
 }
 
-export function ExteriorViewer({ vehicleId, imageUrls }: Props) {
+export function ExteriorViewer({ vehicleId, imageUrls: initialImageUrls }: Props) {
   const [angle, setAngle] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
+  const [resolvedUrls, setResolvedUrls] = useState<string[]>(initialImageUrls ?? [])
   const startXRef = useRef(0)
   const startAngleRef = useRef(0)
   const rafRef = useRef<number>(0)
+
+  // Self-fetch exterior image URLs if not pre-provided
+  useEffect(() => {
+    if (initialImageUrls && initialImageUrls.length > 0) return
+    fetch(`/api/media?vehicleId=${encodeURIComponent(vehicleId)}&type=EXTERIOR_IMAGE`)
+      .then((r) => r.json())
+      .then((json: { data?: SignedMediaResponse[] }) => {
+        const urls = json.data?.map((m) => m.url) ?? []
+        if (urls.length > 0) setResolvedUrls(urls)
+      })
+      .catch(() => undefined)
+  }, [vehicleId, initialImageUrls])
 
   useEffect(() => {
     if (isDragging) return
@@ -104,8 +119,8 @@ export function ExteriorViewer({ vehicleId, imageUrls }: Props) {
   const flipX = cosA < 0
 
   // Show real images if available, otherwise wireframe
-  const currentImage = imageUrls && imageUrls.length > 0
-    ? imageUrls[Math.floor((angle / 360) * imageUrls.length) % imageUrls.length]
+  const currentImage = resolvedUrls.length > 0
+    ? resolvedUrls[Math.floor((angle / 360) * resolvedUrls.length) % resolvedUrls.length]
     : null
 
   return (
