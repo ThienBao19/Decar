@@ -14,11 +14,17 @@ import {
   updateChaseCamera,
 } from './porsche911/driving-controls'
 import type { DrivingState, KeyState } from './porsche911/driving-controls'
+import { ExhaustEffect } from './porsche911/exhaust-effect'
+import { TireSparks } from './tire-sparks'
 
 interface Props {
   className?: string
+  make?: string
+  model?: string
+  bodyColor?: number
   onSpeedChange?: (speed: number) => void
   onRevChange?: (revving: boolean) => void
+  onDriftChange?: (drifting: boolean) => void
 }
 
 const BG = 0x1a1a24
@@ -144,7 +150,7 @@ function buildInfiniteGround(): {
   return { group, update }
 }
 
-export function Porsche911DrivingViewer({ className, onSpeedChange, onRevChange }: Props) {
+export function Porsche911DrivingViewer({ className, make, model: modelName, bodyColor, onSpeedChange, onRevChange, onDriftChange }: Props) {
   const mountRef = useRef<HTMLDivElement>(null)
   const stateRef = useRef<DrivingState>(createDrivingState())
   const keysRef = useRef<KeyState>(createKeyState())
@@ -196,38 +202,49 @@ export function Porsche911DrivingViewer({ className, onSpeedChange, onRevChange 
     car.userData.wheels = []
     scene.add(car)
 
-    // Load model
+    // Exhaust flames (nitro) + tire sparks (drift)
+    const exhaust = new ExhaustEffect(scene)
+    const sparks = new TireSparks(scene)
+
+    // Load model — fall back to Porsche 911 procedural if GLB unavailable
     const loader = new GLTFLoader()
     const dracoLoader = new DRACOLoader()
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/')
     loader.setDRACOLoader(dracoLoader)
-    loader.load('/models/mclaren_p1.glb', (gltf) => {
-      const model = gltf.scene
 
-      // Auto-fit
-      const box = new THREE.Box3().setFromObject(model)
-      const sz = box.getSize(new THREE.Vector3())
-      const maxDim = Math.max(sz.x, sz.y, sz.z)
-      const scale = 4.5 / maxDim
-      model.scale.setScalar(scale)
-      const center = box.getCenter(new THREE.Vector3())
-      model.position.sub(center.multiplyScalar(scale))
-      model.position.y = 0
-
-      // Optimize meshes — disable per-object shadows, use simpler materials where possible
-      model.traverse((child) => {
-        if ((child as THREE.Mesh).isMesh) {
-          const mesh = child as THREE.Mesh
-          mesh.castShadow = false
-          mesh.receiveShadow = false
-          mesh.frustumCulled = true
-        }
-      })
-      car.add(model)
-
-      // Cleanup draco decoder after load
-      dracoLoader.dispose()
-    })
+    // Try to load a make-specific model, fall back to procedural
+    const modelPath = `/models/mclaren_p1.glb`
+    loader.load(
+      modelPath,
+      (gltf) => {
+        const model = gltf.scene
+        const box = new THREE.Box3().setFromObject(model)
+        const sz = box.getSize(new THREE.Vector3())
+        const scale = 4.5 / Math.max(sz.x, sz.y, sz.z)
+        model.scale.setScalar(scale)
+        const center = box.getCenter(new THREE.Vector3())
+        model.position.sub(center.multiplyScalar(scale))
+        model.position.y = 0
+        model.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            const mesh = child as THREE.Mesh
+            mesh.castShadow = false
+            mesh.receiveShadow = false
+            mesh.frustumCulled = true
+          }
+        })
+        car.add(model)
+        dracoLoader.dispose()
+      },
+      undefined,
+      () => {
+        // No GLB — build procedural car from Porsche 911 builder
+        import('./porsche911/build-porsche911').then(({ buildPorsche911 }) => {
+          const proc = buildPorsche911(bodyColor)
+          car.add(proc)
+        })
+      },
+    )
 
     // Camera
     const camera = new THREE.PerspectiveCamera(50, el.clientWidth / el.clientHeight, 0.5, 200) // near 0.5 instead of 0.1
@@ -237,13 +254,13 @@ export function Porsche911DrivingViewer({ className, onSpeedChange, onRevChange 
     const onKeyDown = (e: KeyboardEvent) => {
       if (!focusedRef.current) return
       const code = e.code
-      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].includes(code)) {
+      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight','Space'].includes(code)) {
         e.preventDefault()
       }
-      handleKeyDown(keysRef.current, code)
+      keysRef.current = handleKeyDown(keysRef.current, code)
     }
     const onKeyUp = (e: KeyboardEvent) => {
-      handleKeyUp(keysRef.current, e.code)
+      keysRef.current = handleKeyUp(keysRef.current, e.code)
     }
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
@@ -264,37 +281,57 @@ export function Porsche911DrivingViewer({ className, onSpeedChange, onRevChange 
 
       applyToCarGroup(car, state, dt)
 
-      // Ground update throttled — every 0.5s instead of every frame
+      // Nitro exhaust flames
+      if (state.nitroBoost > 0.05) {
+        exhaust.trigger(state.nitroBoost)
+        exhaust.update(new THREE.Vector3(state.posX, 0, state.posZ), state.heading, state.speed, dt)
+      } else {
+        exhaust.stop()
+        exhaust.update(new THREE.Vector3(state.posX, 0, state.posZ), state.heading, state.speed, dt)
+      }
+
+      // Tire sparks on drift — spawn at rear wheel positions
+      if (state.isDrifting && state.driftIntensity > 0.1) {
+        const rearOffset = 1.35
+        const sideOffset = 0.88
+        const rx = state.posX + Math.cos(state.heading) * sideOffset
+        const lx = state.posX - Math.cos(state.heading) * sideOffset
+        const rz = state.posZ - Math.cos(state.heading + Math.PI / 2) * rearOffset
+        const lz = rz
+        sparks.spawn(rx, rz, state.heading, state.driftIntensity)
+        sparks.spawn(lx, lz, state.heading, state.driftIntensity)
+      }
+      sparks.update(dt)
+
+      // Ground update throttled
       groundTick += dt
       if (groundTick > 0.5) {
         groundTick = 0
         ground.update(state.posX, state.posZ)
       }
 
-      // Move directional light to follow car (cheap)
       dir.position.set(state.posX + 5, 10, state.posZ + 5)
 
-      // Chase camera
       const { camPos, camLook } = updateChaseCamera(
         camera, state, camPosRef.current, camLookRef.current, dt,
       )
       camPosRef.current = camPos
       camLookRef.current = camLook
 
-      // Camera shake on rev (simplified)
-      if (state.isRevving) {
-        camera.position.x += (Math.random() - 0.5) * 0.02 * state.nitroBoost
-        camera.position.y += (Math.random() - 0.5) * 0.02 * state.nitroBoost
+      // Camera shake on nitro
+      if (state.nitroBoost > 0.3) {
+        camera.position.x += (Math.random() - 0.5) * 0.025 * state.nitroBoost
+        camera.position.y += (Math.random() - 0.5) * 0.015 * state.nitroBoost
       }
 
       renderer.render(scene, camera)
 
-      // HUD (throttled)
       hudTick += dt
-      if (hudTick > 0.15) {
+      if (hudTick > 0.12) {
         hudTick = 0
         onSpeedChange?.(Math.abs(Math.round(state.speed * 3.6)))
         onRevChange?.(state.isRevving)
+        onDriftChange?.(state.isDrifting)
       }
     }
     animate()
@@ -318,10 +355,12 @@ export function Porsche911DrivingViewer({ className, onSpeedChange, onRevChange 
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
       obs.disconnect()
+      exhaust.dispose()
+      sparks.dispose()
       renderer.dispose()
       if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement)
     }
-  }, [onSpeedChange, onRevChange])
+  }, [onSpeedChange, onRevChange, onDriftChange, bodyColor])
 
   return (
     <div

@@ -1,7 +1,9 @@
 ﻿import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { searchVehicles, getPopularMakes, getYearRange } from '@/lib/vehicle-cache'
 import { VehicleSearchForm } from '@/components/vehicle/VehicleSearchForm'
+import { getVehicleThumbnailUrl } from '@/lib/vehicle-images'
 
 export const metadata: Metadata = { title: 'Browse Vehicles | Decar' }
 
@@ -21,12 +23,15 @@ export default async function VehiclesPage({ searchParams }: PageProps) {
   const pageNum = sp.page ? parseInt(sp.page, 10) : 1
   const yearNum = sp.year ? parseInt(sp.year, 10) : undefined
 
-  const searchArgs: Record<string, string | number> = { page: pageNum, limit: 24 }
-  if (sp.make) searchArgs.make = sp.make
-  if (sp.model) searchArgs.model = sp.model
-  if (yearNum) searchArgs.year = yearNum
-  if (sp.fuelType) searchArgs.fuelType = sp.fuelType
-  if (sp.bodyType) searchArgs.bodyType = sp.bodyType
+  const searchArgs = {
+    page: pageNum,
+    limit: 24,
+    ...(sp.make ? { make: sp.make } : {}),
+    ...(sp.model ? { model: sp.model } : {}),
+    ...(yearNum ? { year: yearNum } : {}),
+    ...(sp.fuelType ? { fuelType: sp.fuelType } : {}),
+    ...(sp.bodyType ? { bodyType: sp.bodyType } : {}),
+  }
 
   const result = await searchVehicles(searchArgs as Parameters<typeof searchVehicles>[0])
   const popularMakes = getPopularMakes()
@@ -78,7 +83,7 @@ export default async function VehiclesPage({ searchParams }: PageProps) {
       )}
 
       {/* Results */}
-      {hasFilters && result.data.length === 0 && (
+      {hasFilters && !result.data.length && (
         <div className="mt-20 flex flex-col items-center gap-3 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#2e2e2e] bg-[#1c1c1c]">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4d4d4d" strokeWidth="2">
@@ -112,10 +117,14 @@ export default async function VehiclesPage({ searchParams }: PageProps) {
                 href={`/vehicles/${v.slug}`}
                 className="group flex flex-col gap-3 rounded-xl border border-[#2e2e2e] bg-[#171717] p-5 transition-all hover:border-[#363636] hover:bg-[#1c1c1c]"
               >
-                <div className="flex aspect-[16/10] items-center justify-center rounded-lg bg-[#0f0f0f]">
-                  <span className="text-[32px] font-bold text-[#2e2e2e]">
-                    {v.make.charAt(0)}
-                  </span>
+                <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-[#0f0f0f]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={getVehicleThumbnailUrl(v.make, v.model, v.year)}
+                    alt={`${v.year} ${v.make} ${v.model}`}
+                    className="h-full w-full object-contain"
+                    loading="lazy"
+                  />
                 </div>
                 <div className="flex flex-col gap-1">
                   <h3 className="text-[15px] font-semibold text-[#fafafa] group-hover:text-[#3ecf8e] transition-colors">
