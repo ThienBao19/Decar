@@ -1,29 +1,22 @@
-import { notFound } from 'next/navigation'
+﻿import { notFound } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
-import type { VehicleDetailDTO } from '@decar/shared'
 import { authOptions } from '@/lib/auth'
-import { apiClient } from '@/lib/api-client'
-import { VehicleSpecs } from '@/components/vehicle/VehicleSpecs'
-import { ColorSwatch } from '@/components/vehicle/ColorSwatch'
-import { UpgradeGate } from '@/components/viewer/UpgradeGate'
+import { getVehicleBySlug } from '@/lib/vehicle-cache'
 
 export const revalidate = 3600
 
-const Engine3DViewer = dynamic(
-  () => import('@/components/viewer/Engine3DViewer').then((m) => m.Engine3DViewer),
-  { ssr: false, loading: () => <ViewerSkeleton /> },
-)
-const ExteriorViewer = dynamic(
-  () => import('@/components/viewer/ExteriorViewer').then((m) => m.ExteriorViewer),
-  { ssr: false, loading: () => <ViewerSkeleton /> },
+const G63AssemblyViewer = dynamic(
+  () => import('@/components/viewer/G63AssemblyViewer').then((m) => m.G63AssemblyViewer),
+  { ssr: false, loading: () => <ViewerSkeleton label="Loading 3D viewer..." /> },
 )
 
-function ViewerSkeleton() {
+function ViewerSkeleton({ label }: { label?: string }) {
   return (
-    <div className="flex aspect-video w-full items-center justify-center rounded-xl border border-[#2e2e2e] bg-[#1c1c1c]">
+    <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-xl border border-[#2e2e2e] bg-[#1c1c1c]">
       <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3ecf8e]/40 border-t-[#3ecf8e]" />
+      {label && <span className="text-[11px] text-[#4d4d4d]">{label}</span>}
     </div>
   )
 }
@@ -33,25 +26,17 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const vehicle = await fetchVehicle(params.id)
+  const vehicle = await getVehicleBySlug(params.id)
   if (!vehicle) return { title: 'Vehicle Not Found' }
   return {
-    title: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
-    description: `Specs for the ${vehicle.year} ${vehicle.make} ${vehicle.model}.`,
-  }
-}
-
-async function fetchVehicle(id: string): Promise<VehicleDetailDTO | null> {
-  try {
-    return await apiClient.get<VehicleDetailDTO>(`/vehicles/${id}`)
-  } catch {
-    return null
+    title: `${vehicle.year} ${vehicle.make} ${vehicle.model} | Decar`,
+    description: `Full specs for the ${vehicle.year} ${vehicle.make} ${vehicle.model}.`,
   }
 }
 
 export default async function VehicleDetailPage({ params }: PageProps) {
   const [vehicle, session] = await Promise.all([
-    fetchVehicle(params.id),
+    getVehicleBySlug(params.id),
     getServerSession(authOptions),
   ])
 
@@ -59,77 +44,109 @@ export default async function VehicleDetailPage({ params }: PageProps) {
 
   const isPro = session?.user?.tier === 'PRO'
 
+  // Derive display values
+  const powerHp = vehicle.engine ? Math.round(vehicle.engine.powerKw * 1.341) : null
+  const fuelLabel = vehicle.engine?.fuelType ?? 'N/A'
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">
+      {/* Breadcrumb */}
       <nav className="mb-6 flex items-center gap-2 text-[13px] text-[#4d4d4d]">
         <a href="/vehicles" className="hover:text-[#898989]">Vehicles</a>
         <span>/</span>
-        <span className="text-[#898989]">{vehicle.make} {vehicle.model}</span>
+        <a href={`/vehicles?make=${encodeURIComponent(vehicle.make)}`} className="hover:text-[#898989]">{vehicle.make}</a>
+        <span>/</span>
+        <span className="text-[#898989]">{vehicle.model}</span>
       </nav>
 
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-[32px] font-semibold tracking-tight text-[#fafafa]">
-            {vehicle.year} {vehicle.make} {vehicle.model}
-          </h1>
-          {vehicle.trimLevel && (
-            <p className="mt-1 text-[16px] text-[#898989]">{vehicle.trimLevel}</p>
-          )}
-          <div className="mt-3 flex flex-wrap gap-2">
-            {vehicle.exterior?.bodyType && (
-              <span className="rounded-full border border-[#2e2e2e] bg-[#1c1c1c] px-3 py-1 text-[12px] text-[#b4b4b4]">{vehicle.exterior.bodyType}</span>
-            )}
-            <span className="rounded-full border border-[#2e2e2e] bg-[#1c1c1c] px-3 py-1 text-[12px] text-[#b4b4b4]">{vehicle.market}</span>
-            {vehicle.engine?.fuelType && (
-              <span className="rounded-full border border-[#2e2e2e] bg-[#1c1c1c] px-3 py-1 text-[12px] text-[#b4b4b4]">{vehicle.engine.fuelType}</span>
-            )}
-          </div>
-        </div>
-        {isPro && (
-          <a
-            href={`${process.env.NEXT_PUBLIC_API_URL ?? ''}/vehicles/${vehicle.id}/export/pdf`}
-            className="flex items-center gap-2 rounded-[9999px] border border-[#2e2e2e] bg-[#1c1c1c] px-4 py-2 text-[13px] text-[#b4b4b4] hover:text-[#fafafa]"
-            target="_blank" rel="noopener noreferrer"
-          >Export PDF</a>
+      {/* Title */}
+      <div className="mb-8">
+        <h1 className="text-[32px] font-semibold tracking-tight text-[#fafafa]">
+          {vehicle.year} {vehicle.make} {vehicle.model}
+        </h1>
+        {vehicle.trimLevel && (
+          <p className="mt-1 text-[16px] text-[#898989]">{vehicle.trimLevel}</p>
         )}
+        <div className="mt-3 flex flex-wrap gap-2">
+          {vehicle.exterior?.bodyType && (
+            <span className="rounded-full border border-[#2e2e2e] bg-[#1c1c1c] px-3 py-1 text-[12px] text-[#b4b4b4]">
+              {vehicle.exterior.bodyType}
+            </span>
+          )}
+          <span className="rounded-full border border-[#2e2e2e] bg-[#1c1c1c] px-3 py-1 text-[12px] text-[#b4b4b4]">
+            {vehicle.market}
+          </span>
+          {vehicle.engine?.fuelType && (
+            <span className="rounded-full border border-[#2e2e2e] bg-[#1c1c1c] px-3 py-1 text-[12px] text-[#b4b4b4]">
+              {fuelLabel}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
+        {/* Main content */}
         <div className="space-y-6 lg:col-span-2">
-          <section>
-            <h2 className="mb-3 text-[15px] font-semibold text-[#fafafa]">Exterior 360</h2>
-            {isPro ? <ExteriorViewer vehicleId={vehicle.id} /> : <UpgradeGate label="360 Exterior View" description="Rotate and inspect the full exterior in Pro." />}
-          </section>
-          <section>
-            <h2 className="mb-3 text-[15px] font-semibold text-[#fafafa]">Engine Interactive 3D</h2>
-            {isPro ? <Engine3DViewer vehicleId={vehicle.id} /> : <UpgradeGate label="Interactive 3D Engine" description="Explore engine internals in full 3D with Pro." />}
-          </section>
-          {vehicle.exterior && (
-            <section>
-              <h2 className="mb-3 text-[15px] font-semibold text-[#fafafa]">Dimensions</h2>
-              <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {/* Engine specs */}
+          {vehicle.engine && (
+            <section className="rounded-xl border border-[#2e2e2e] bg-[#171717] overflow-hidden">
+              <div className="border-b border-[#2e2e2e] px-5 py-3">
+                <h2 className="text-[15px] font-semibold text-[#fafafa]">Engine</h2>
+              </div>
+              <dl className="divide-y divide-[#242424]">
                 {[
-                  { label: 'Length',    value: isPro ? `${vehicle.exterior.lengthMm} mm`    : 'Pro' },
-                  { label: 'Width',     value: isPro ? `${vehicle.exterior.widthMm} mm`     : 'Pro' },
-                  { label: 'Height',    value: isPro ? `${vehicle.exterior.heightMm} mm`    : 'Pro' },
-                  { label: 'Wheelbase', value: isPro ? `${vehicle.exterior.wheelbaseMm} mm` : 'Pro' },
+                  { label: 'Displacement', value: `${vehicle.engine.displacement}L` },
+                  { label: 'Cylinders', value: String(vehicle.engine.cylinders) },
+                  { label: 'Power', value: isPro ? `${vehicle.engine.powerKw} kW (${powerHp} hp)` : 'Pro' },
+                  { label: 'Torque', value: isPro ? `${vehicle.engine.torqueNm} Nm` : 'Pro' },
+                  { label: 'Fuel type', value: fuelLabel },
+                  { label: 'Transmission', value: vehicle.engine.transmission },
+                  { label: 'Drivetrain', value: vehicle.engine.drivetrain },
                 ].map(({ label, value }) => (
-                  <div key={label} className="rounded-lg border border-[#2e2e2e] bg-[#1c1c1c] px-4 py-3">
-                    <dt className="text-[11px] uppercase tracking-widest text-[#4d4d4d]">{label}</dt>
-                    <dd className={`mt-1 text-[14px] font-medium ${isPro ? 'text-[#fafafa]' : 'text-[#4d4d4d]'}`}>{value}</dd>
+                  <div key={label} className="flex items-center justify-between px-5 py-3 text-[13px]">
+                    <dt className="text-[#898989]">{label}</dt>
+                    <dd className={`font-medium ${value === 'Pro' ? 'text-[#4d4d4d]' : 'text-[#fafafa]'}`}>
+                      {value === 'Pro' ? (
+                        <span className="rounded-full border border-[#3ecf8e]/30 bg-[#3ecf8e]/10 px-2 py-0.5 text-[11px] text-[#3ecf8e]">
+                          Pro
+                        </span>
+                      ) : value}
+                    </dd>
                   </div>
                 ))}
               </dl>
             </section>
           )}
-          {isPro && vehicle.interior && (
+
+          {/* Dimensions */}
+          {vehicle.exterior && (
+            <section>
+              <h2 className="mb-3 text-[15px] font-semibold text-[#fafafa]">Dimensions</h2>
+              <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  { label: 'Length', value: `${vehicle.exterior.lengthMm} mm` },
+                  { label: 'Width', value: `${vehicle.exterior.widthMm} mm` },
+                  { label: 'Height', value: `${vehicle.exterior.heightMm} mm` },
+                  { label: 'Wheelbase', value: `${vehicle.exterior.wheelbaseMm} mm` },
+                ].map(({ label, value }) => (
+                  <div key={label} className="rounded-lg border border-[#2e2e2e] bg-[#1c1c1c] px-4 py-3">
+                    <dt className="text-[11px] uppercase tracking-widest text-[#4d4d4d]">{label}</dt>
+                    <dd className="mt-1 text-[14px] font-medium text-[#fafafa]">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+
+          {/* Interior */}
+          {vehicle.interior && isPro && (
             <section>
               <h2 className="mb-3 text-[15px] font-semibold text-[#fafafa]">Interior</h2>
               <dl className="divide-y divide-[#242424] rounded-xl border border-[#2e2e2e] bg-[#1c1c1c]">
                 {[
                   { label: 'Seat material', value: vehicle.interior.seatMaterial },
-                  { label: 'Rows / seats',  value: `${vehicle.interior.seatRows} rows / ${vehicle.interior.seatCount} seats` },
-                  { label: 'Dashboard',     value: vehicle.interior.dashboard },
+                  { label: 'Rows / seats', value: `${vehicle.interior.seatRows} rows / ${vehicle.interior.seatCount} seats` },
+                  { label: 'Dashboard', value: vehicle.interior.dashboard },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between px-4 py-3 text-[13px]">
                     <dt className="text-[#898989]">{label}</dt>
@@ -137,38 +154,79 @@ export default async function VehicleDetailPage({ params }: PageProps) {
                   </div>
                 ))}
               </dl>
-              {vehicle.interior.techFeatures.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {vehicle.interior.techFeatures.map((f) => (
-                    <span key={f} className="rounded-full border border-[#2e2e2e] bg-[#1c1c1c] px-3 py-1 text-[12px] text-[#b4b4b4]">{f}</span>
-                  ))}
-                </div>
-              )}
             </section>
+          )}
+
+          {/* No data state */}
+          {!vehicle.engine && !vehicle.exterior && (
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-[#2e2e2e] bg-[#171717] px-8 py-16 text-center">
+              <span className="text-[32px]">🚗</span>
+              <p className="text-[15px] font-medium text-[#898989]">
+                Basic listing from NHTSA
+              </p>
+              <p className="text-[13px] text-[#4d4d4d]">
+                Detailed specs will be added as data becomes available.
+                This vehicle was cached from the NHTSA database.
+              </p>
+            </div>
           )}
         </div>
 
+        {/* Sidebar */}
         <div className="space-y-6">
-          {vehicle.engine && <VehicleSpecs engine={vehicle.engine} isPro={isPro} />}
+          {/* Colors */}
           {vehicle.exterior?.colors && vehicle.exterior.colors.length > 0 && (
             <section>
               <h2 className="mb-3 text-[15px] font-semibold text-[#fafafa]">Paint Colors</h2>
               <div className="flex flex-wrap gap-3 rounded-xl border border-[#2e2e2e] bg-[#1c1c1c] p-4">
                 {vehicle.exterior.colors.map((color) => (
-                  <ColorSwatch key={color.id} color={color} />
+                  <div key={color.id} className="flex flex-col items-center gap-1.5">
+                    <div
+                      className="h-8 w-8 rounded-full border border-[#2e2e2e]"
+                      style={{ backgroundColor: color.hexCode }}
+                      title={color.name}
+                    />
+                    <span className="text-[10px] text-[#4d4d4d]">{color.name}</span>
+                  </div>
                 ))}
               </div>
             </section>
           )}
+
+          {/* Upgrade CTA */}
           {!isPro && (
             <div className="rounded-xl border border-[#3ecf8e]/20 bg-[#3ecf8e]/5 p-5">
               <p className="text-[14px] font-semibold text-[#fafafa]">Unlock full specs</p>
-              <p className="mt-1 text-[13px] text-[#898989]">Power, torque, 3D viewer, and PDF export on Pro.</p>
-              <a href="/pricing" className="mt-4 block w-full rounded-[9999px] bg-[#3ecf8e] py-2 text-center text-[13px] font-medium text-[#0f0f0f] transition-opacity hover:opacity-90">
+              <p className="mt-1 text-[13px] text-[#898989]">
+                Power, torque, 3D viewer, interior details, and PDF export.
+              </p>
+              <a
+                href="/pricing"
+                className="mt-4 block w-full rounded-[9999px] bg-[#3ecf8e] py-2 text-center text-[13px] font-medium text-[#0f0f0f] transition-opacity hover:opacity-90"
+              >
                 Upgrade to Pro
               </a>
             </div>
           )}
+
+          {/* Vehicle info card */}
+          <div className="rounded-xl border border-[#2e2e2e] bg-[#171717] p-5">
+            <h3 className="text-[13px] font-semibold text-[#fafafa]">Vehicle Info</h3>
+            <dl className="mt-3 space-y-2 text-[12px]">
+              <div className="flex justify-between">
+                <dt className="text-[#4d4d4d]">Market</dt>
+                <dd className="text-[#b4b4b4]">{vehicle.market}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-[#4d4d4d]">Added</dt>
+                <dd className="text-[#b4b4b4]">{new Date(vehicle.createdAt).toLocaleDateString()}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-[#4d4d4d]">Source</dt>
+                <dd className="text-[#b4b4b4]">NHTSA vPIC</dd>
+              </div>
+            </dl>
+          </div>
         </div>
       </div>
     </div>
