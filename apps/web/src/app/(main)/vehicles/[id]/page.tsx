@@ -1,9 +1,10 @@
-﻿import { notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import { authOptions } from '@/lib/auth'
 import { getVehicleBySlug } from '@/lib/vehicle-cache'
+import { enrichVehicleIfNeeded } from '@/lib/vehicle-enrichment'
 
 export const revalidate = 3600
 
@@ -41,6 +42,16 @@ export default async function VehicleDetailPage({ params }: PageProps) {
   ])
 
   if (!vehicle) notFound()
+
+  // Auto-enrich: fetch specs from fueleconomy.gov if missing
+  if (!vehicle.engine) {
+    await enrichVehicleIfNeeded(vehicle.id)
+    // Re-fetch with enriched data
+    const enriched = await getVehicleBySlug(params.id)
+    if (enriched) {
+      Object.assign(vehicle, enriched)
+    }
+  }
 
   const isPro = session?.user?.tier === 'PRO'
 
