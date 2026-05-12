@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   },
   description:
     'Detailed technical information about vehicles — engine specs, paint colors, 3D models, and more.',
-  metadataBase: new URL(process.env.NEXTAUTH_URL ?? 'https://decar.io'),
+  metadataBase: new URL((process.env.NEXTAUTH_URL ?? 'https://decar.io').replace(/^﻿/, '').trim()),
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
