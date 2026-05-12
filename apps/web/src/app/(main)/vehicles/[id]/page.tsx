@@ -179,7 +179,7 @@ export default async function VehicleDetailPage({ params }: PageProps) {
             <section>
               <h2 className="mb-3 text-[15px] font-semibold text-[#fafafa]">Paint Colors</h2>
               <div className="flex flex-wrap gap-3 rounded-xl border border-[#2e2e2e] bg-[#1c1c1c] p-4">
-                {vehicle.exterior.colors.map((color) => (
+                {vehicle.exterior.colors.map((color: { id: string; name: string; hexCode: string }) => (
                   <div key={color.id} className="flex flex-col items-center gap-1.5">
                     <div
                       className="h-8 w-8 rounded-full border border-[#2e2e2e]"

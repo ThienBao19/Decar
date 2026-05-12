@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
-    "build": "next build",
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -37,7 +38,11 @@
     "tailwind-merge": "^2.6.1",
     "three": "^0.184.0"
   },
+  "prisma": {
+    "schema": "../api/prisma/schema.prisma"
+  },
   "devDependencies": {
+    "prisma": "^5.16.0",
     "@playwright/test": "^1.45.0",
     "@types/node": "^20.14.0",
     "@types/react": "^18.3.0",
