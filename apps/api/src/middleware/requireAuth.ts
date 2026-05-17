@@ -22,7 +22,7 @@ export async function requireAuth(req: FastifyRequest, reply: FastifyReply): Pro
     // Re-verify tier from Redis — never trust JWT tier (stale after subscription change)
     let resolvedTier: 'FREE' | 'PRO' = raw.tier
 
-    const cachedTier = await req.server.redis.get(`user:${raw.userId}:tier`)
+    const cachedTier = await req.server.redis?.get(`user:${raw.userId}:tier`) ?? null
     if (cachedTier) {
       resolvedTier = cachedTier as 'FREE' | 'PRO'
     } else {
@@ -33,7 +33,7 @@ export async function requireAuth(req: FastifyRequest, reply: FastifyReply): Pro
       })
       if (sub) {
         resolvedTier = sub.tier as 'FREE' | 'PRO'
-        await req.server.redis.setex(`user:${raw.userId}:tier`, 300, sub.tier)
+        await req.server.redis?.setex(`user:${raw.userId}:tier`, 300, sub.tier)
       }
     }
 

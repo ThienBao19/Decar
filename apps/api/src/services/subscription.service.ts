@@ -72,7 +72,7 @@ export async function getBillingPortalUrl(
 
 export async function handleWebhookEvent(
   prisma: PrismaClient,
-  redis: Redis,
+  redis: Redis | null,
   event: Stripe.Event,
 ): Promise<void> {
   switch (event.type) {
@@ -89,7 +89,7 @@ export async function handleWebhookEvent(
           status: 'ACTIVE',
         },
       })
-      await redis.del(`user:${userId}:tier`)
+      await redis?.del(`user:${userId}:tier`)
       break
     }
 
@@ -107,7 +107,7 @@ export async function handleWebhookEvent(
           currentPeriodEnd: new Date(sub.current_period_end * 1000),
         },
       })
-      await redis.del(`user:${userId}:tier`)
+      await redis?.del(`user:${userId}:tier`)
       break
     }
 
@@ -120,7 +120,7 @@ export async function handleWebhookEvent(
         where: { userId },
         data: { tier: 'FREE', status: 'CANCELED', stripeSubscriptionId: null },
       })
-      await redis.del(`user:${userId}:tier`)
+      await redis?.del(`user:${userId}:tier`)
       break
     }
 
@@ -133,7 +133,7 @@ export async function handleWebhookEvent(
         where: { userId },
         data: { status: 'PAST_DUE' },
       })
-      await redis.del(`user:${userId}:tier`)
+      await redis?.del(`user:${userId}:tier`)
       break
     }
   }

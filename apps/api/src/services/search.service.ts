@@ -18,7 +18,7 @@ interface EsVehicleHit {
 
 export async function searchVehicles(
   es: Client,
-  redis: Redis,
+  redis: Redis | null,
   params: VehicleSearchParams,
 ): Promise<PaginatedResult<VehicleListItemDTO>> {
   const page = params.page ?? 1
@@ -28,7 +28,7 @@ export async function searchVehicles(
   const paramsHash = createHash('md5').update(JSON.stringify(params)).digest('hex')
   const cacheKey = `search:${paramsHash}`
 
-  const cached = await redis.get(cacheKey)
+  const cached = await redis?.get(cacheKey)
   if (cached) {
     return JSON.parse(cached) as PaginatedResult<VehicleListItemDTO>
   }
@@ -75,7 +75,7 @@ export async function searchVehicles(
     hasMore: page * limit < total,
   }
 
-  await redis.setex(cacheKey, SEARCH_CACHE_TTL, JSON.stringify(result))
+  await redis?.setex(cacheKey, SEARCH_CACHE_TTL, JSON.stringify(result))
 
   return result
 }

@@ -8,6 +8,11 @@ import { enrichVehicleIfNeeded } from '@/lib/vehicle-enrichment'
 import { getVehicleGalleryUrls } from '@/lib/vehicle-images'
 import { VehicleImageGallery } from '@/components/vehicle/VehicleImageGallery'
 import { VehicleDriveSection } from '@/components/viewer/VehicleDriveSection'
+import { SaveComparisonButton } from '@/components/vehicle/SaveComparisonButton'
+const VehicleAssemblySection = dynamic(
+  () => import('@/components/viewer/VehicleAssemblySection'),
+  { ssr: false },
+)
 
 export const revalidate = 3600
 
@@ -106,7 +111,12 @@ export default async function VehicleDetailPage({ params }: PageProps) {
       {/* Drive this vehicle */}
       <div className="mb-8">
         <h2 className="mb-3 text-[15px] font-semibold text-[#fafafa]">Drive It</h2>
-        <VehicleDriveSection make={v.make} model={v.model} />
+        <VehicleDriveSection make={v.make} model={v.model} bodyType={v.exterior?.bodyType ?? null} />
+      </div>
+
+      {/* Assembly workshop */}
+      <div className="mb-8">
+        <VehicleAssemblySection />
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
@@ -234,7 +244,18 @@ export default async function VehicleDetailPage({ params }: PageProps) {
             </div>
           )}
 
-          {/* Vehicle info card */}
+          {/* Compare */}
+          {session && (
+            <div className="rounded-xl border border-[#2e2e2e] bg-[#171717] p-4">
+              <h3 className="text-[13px] font-semibold text-[#fafafa]">Compare</h3>
+              <p className="mt-1 text-[12px] text-[#4d4d4d]">Save this vehicle to your comparison list.</p>
+              <div className="mt-3">
+                <SaveComparisonButton vehicleAId={v.id} vehicleBId={v.id} label="Save to compare" />
+              </div>
+            </div>
+          )}
+
+                    {/* Vehicle info card */}
           <div className="rounded-xl border border-[#2e2e2e] bg-[#171717] p-5">
             <h3 className="text-[13px] font-semibold text-[#fafafa]">Vehicle Info</h3>
             <dl className="mt-3 space-y-2 text-[12px]">

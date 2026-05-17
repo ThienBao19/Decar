@@ -1,376 +1,45 @@
 'use client'
-
 import { useEffect, useRef, useCallback } from 'react'
 import * as THREE from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
-import {
-  createDrivingState,
-  createKeyState,
-  handleKeyDown,
-  handleKeyUp,
-  updateDriving,
-  applyToCarGroup,
-  updateChaseCamera,
-} from './porsche911/driving-controls'
-import type { DrivingState, KeyState } from './porsche911/driving-controls'
-import { ExhaustEffect } from './porsche911/exhaust-effect'
-import { TireSparks } from './tire-sparks'
-
-interface Props {
-  className?: string
-  make?: string
-  model?: string
-  bodyColor?: number
-  onSpeedChange?: (speed: number) => void
-  onRevChange?: (revving: boolean) => void
-  onDriftChange?: (drifting: boolean) => void
-}
-
-const BG = 0x1a1a24
-const GRID_COLOR = 0x2a2a34
-const CHUNK_SIZE = 80
-const VIEW_DIST = 2 // 5x5 = 25 chunks max (down from 7x7 = 49)
-
-// ── Reusable geometries + materials (created ONCE) ──────────────
-let sharedGroundGeo: THREE.PlaneGeometry | null = null
-let sharedGroundMat: THREE.MeshBasicMaterial | null = null
-let sharedDashGeo: THREE.PlaneGeometry | null = null
-let sharedDashMat: THREE.MeshBasicMaterial | null = null
-let sharedEdgeGeo: THREE.PlaneGeometry | null = null
-let sharedEdgeMat: THREE.MeshBasicMaterial | null = null
-
-function getShared() {
-  if (!sharedGroundGeo) {
-    sharedGroundGeo = new THREE.PlaneGeometry(CHUNK_SIZE, CHUNK_SIZE, 1, 1)
-    sharedGroundMat = new THREE.MeshBasicMaterial({ color: 0x141418 }) // BasicMaterial = no lighting calc
-    sharedDashGeo = new THREE.PlaneGeometry(0.12, 2.5)
-    sharedDashMat = new THREE.MeshBasicMaterial({ color: 0x4a4a58 })
-    sharedEdgeGeo = new THREE.PlaneGeometry(0.08, CHUNK_SIZE)
-    sharedEdgeMat = new THREE.MeshBasicMaterial({ color: 0x3a3a48 })
-  }
-  return { sharedGroundGeo, sharedGroundMat: sharedGroundMat!, sharedDashGeo: sharedDashGeo!, sharedDashMat: sharedDashMat!, sharedEdgeGeo: sharedEdgeGeo!, sharedEdgeMat: sharedEdgeMat! }
-}
-
-function buildInfiniteGround(): {
-  group: THREE.Group
-  update: (cx: number, cz: number) => void
-} {
-  const group = new THREE.Group()
-  const loaded = new Map<string, THREE.Object3D>()
-  const shared = getShared()
-
-  function chunkKey(gx: number, gz: number): string {
-    return gx + ',' + gz
-  }
-
-  function createChunk(gx: number, gz: number): THREE.Object3D {
-    const chunk = new THREE.Group()
-
-    // Ground plane — MeshBasicMaterial (no lighting)
-    const plane = new THREE.Mesh(shared.sharedGroundGeo!, shared.sharedGroundMat)
-    plane.rotation.x = -Math.PI / 2
-    plane.position.set(gx * CHUNK_SIZE, -0.46, gz * CHUNK_SIZE)
-    chunk.add(plane)
-
-    // Grid — only for nearby chunks
-    const dist = Math.abs(gx) + Math.abs(gz)
-    if (dist <= 2) {
-      const grid = new THREE.GridHelper(CHUNK_SIZE, 12, GRID_COLOR, GRID_COLOR) // reduced from 20 to 12 subdivisions
-      grid.position.set(gx * CHUNK_SIZE, -0.45, gz * CHUNK_SIZE)
-      chunk.add(grid)
-    }
-
-    // Road markings — only center column
-    if (gx === 0) {
-      const startZ = gz * CHUNK_SIZE - CHUNK_SIZE / 2
-      for (let z = startZ; z < startZ + CHUNK_SIZE; z += 8) { // wider spacing
-        const dash = new THREE.Mesh(shared.sharedDashGeo!, shared.sharedDashMat)
-        dash.rotation.x = -Math.PI / 2
-        dash.position.set(0, -0.44, z)
-        chunk.add(dash)
-      }
-      for (const xOff of [-4, 4]) {
-        const edge = new THREE.Mesh(shared.sharedEdgeGeo!, shared.sharedEdgeMat)
-        edge.rotation.x = -Math.PI / 2
-        edge.position.set(xOff, -0.44, gz * CHUNK_SIZE)
-        chunk.add(edge)
-      }
-    }
-
-    // NO more PointLights per chunk — biggest perf killer removed
-    // Lamp posts are just visual meshes now (emissive material fakes the glow)
-    if (gx === 0 && dist <= 1) {
-      const lampMat = new THREE.MeshBasicMaterial({ color: 0x333338 })
-      const glowMat = new THREE.MeshBasicMaterial({ color: 0xffcc66 })
-      const lampGeo = new THREE.CylinderGeometry(0.05, 0.07, 4, 4) // 4 sides instead of 6
-      const headGeo = new THREE.SphereGeometry(0.15, 4, 4) // 4 segments instead of 8
-
-      const startZ2 = gz * CHUNK_SIZE - CHUNK_SIZE / 2
-      for (let z = startZ2 + 20; z < startZ2 + CHUNK_SIZE; z += 40) { // wider spacing
-        for (const side of [-1, 1]) {
-          const pole = new THREE.Mesh(lampGeo, lampMat)
-          pole.position.set(side * 6, 1.55, z)
-          chunk.add(pole)
-          const head = new THREE.Mesh(headGeo, glowMat)
-          head.position.set(side * 6, 3.6, z)
-          chunk.add(head)
-          // NO PointLight — this was creating 28+ dynamic lights
-        }
-      }
-    }
-
-    group.add(chunk)
-    return chunk
-  }
-
-  function update(cx: number, cz: number): void {
-    const gcx = Math.round(cx / CHUNK_SIZE)
-    const gcz = Math.round(cz / CHUNK_SIZE)
-
-    const needed = new Set<string>()
-    for (let dx = -VIEW_DIST; dx <= VIEW_DIST; dx++) {
-      for (let dz = -VIEW_DIST; dz <= VIEW_DIST; dz++) {
-        const key = chunkKey(gcx + dx, gcz + dz)
-        needed.add(key)
-        if (!loaded.has(key)) {
-          loaded.set(key, createChunk(gcx + dx, gcz + dz))
-        }
-      }
-    }
-
-    for (const [key, chunk] of loaded) {
-      if (!needed.has(key)) {
-        group.remove(chunk)
-        loaded.delete(key)
-      }
-    }
-  }
-
-  return { group, update }
-}
-
-export function Porsche911DrivingViewer({ className, make, model: modelName, bodyColor, onSpeedChange, onRevChange, onDriftChange }: Props) {
+import { createDrivingState, createKeyState, handleKeyDown, handleKeyUp, updateDriving, applyToCarGroup, updateChaseCamera, type DrivingState, type KeyState } from './porsche911/driving-controls'
+import { buildRig } from './drive-map/scene-builder'
+const KEYS = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight','Space']
+interface Props { className?: string; make?: string; model?: string; bodyType?: string | null; bodyColor?: number; onSpeedChange?: (s: number) => void; onRevChange?: (r: boolean) => void; onDriftChange?: (d: boolean) => void }
+export function Porsche911DrivingViewer({ className, make, model, bodyType, bodyColor, onSpeedChange, onRevChange, onDriftChange }: Props) {
   const mountRef = useRef<HTMLDivElement>(null)
-  const stateRef = useRef<DrivingState>(createDrivingState())
-  const keysRef = useRef<KeyState>(createKeyState())
-  const camPosRef = useRef(new THREE.Vector3(0, 3, -8))
-  const camLookRef = useRef(new THREE.Vector3(0, 1, 4))
-  const focusedRef = useRef(false)
-
-  const handleFocus = useCallback(() => { focusedRef.current = true }, [])
-  const handleBlur = useCallback(() => { focusedRef.current = false }, [])
-
+  const handleClick = useCallback(() => mountRef.current?.focus(), [])
   useEffect(() => {
-    const el = mountRef.current
-    if (!el) return
-
-    // Renderer — capped pixel ratio, disabled antialias on mobile
-    const isMobile = window.innerWidth < 768
-    const renderer = new THREE.WebGLRenderer({
-      antialias: !isMobile,
-      alpha: false,
-      powerPreference: 'high-performance',
-    })
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 1.5))
-    renderer.setSize(el.clientWidth, el.clientHeight)
-    renderer.shadowMap.enabled = false // shadows OFF — huge perf gain
-    renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.5
-    el.appendChild(renderer.domElement)
-
-    // Scene
-    const scene = new THREE.Scene()
-    scene.background = new THREE.Color(BG)
-    scene.fog = new THREE.FogExp2(BG, 0.008)
-
-    // Lights — minimal: just 3 lights total (ambient + directional + hemi)
-    scene.add(new THREE.AmbientLight(0xffffff, 1.0))
-    const dir = new THREE.DirectionalLight(0xfff0dd, 2.0)
-    dir.position.set(5, 10, 5)
-    scene.add(dir)
-    const hemi = new THREE.HemisphereLight(0x556688, 0x1a1a24, 0.8)
-    scene.add(hemi)
-
-    // Infinite ground
-    const ground = buildInfiniteGround()
-    scene.add(ground.group)
-    ground.update(0, 0)
-
-    // Car
-    const car = new THREE.Group()
-    car.userData.wheels = []
-    scene.add(car)
-
-    // Exhaust flames (nitro) + tire sparks (drift)
-    const exhaust = new ExhaustEffect(scene)
-    const sparks = new TireSparks(scene)
-
-    // Load model — fall back to Porsche 911 procedural if GLB unavailable
-    const loader = new GLTFLoader()
-    const dracoLoader = new DRACOLoader()
-    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/')
-    loader.setDRACOLoader(dracoLoader)
-
-    // Try to load a make-specific model, fall back to procedural
-    const modelPath = `/models/mclaren_p1.glb`
-    loader.load(
-      modelPath,
-      (gltf) => {
-        const model = gltf.scene
-        const box = new THREE.Box3().setFromObject(model)
-        const sz = box.getSize(new THREE.Vector3())
-        const scale = 4.5 / Math.max(sz.x, sz.y, sz.z)
-        model.scale.setScalar(scale)
-        const center = box.getCenter(new THREE.Vector3())
-        model.position.sub(center.multiplyScalar(scale))
-        model.position.y = 0
-        model.traverse((child) => {
-          if ((child as THREE.Mesh).isMesh) {
-            const mesh = child as THREE.Mesh
-            mesh.castShadow = false
-            mesh.receiveShadow = false
-            mesh.frustumCulled = true
-          }
-        })
-        car.add(model)
-        dracoLoader.dispose()
-      },
-      undefined,
-      () => {
-        // No GLB — build procedural car from Porsche 911 builder
-        import('./porsche911/build-porsche911').then(({ buildPorsche911 }) => {
-          const proc = buildPorsche911(bodyColor)
-          car.add(proc)
-        })
-      },
-    )
-
-    // Camera
-    const camera = new THREE.PerspectiveCamera(50, el.clientWidth / el.clientHeight, 0.5, 200) // near 0.5 instead of 0.1
-    camera.position.copy(camPosRef.current)
-
-    // Input
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (!focusedRef.current) return
-      const code = e.code
-      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight','Space'].includes(code)) {
-        e.preventDefault()
-      }
-      keysRef.current = handleKeyDown(keysRef.current, code)
-    }
-    const onKeyUp = (e: KeyboardEvent) => {
-      keysRef.current = handleKeyUp(keysRef.current, e.code)
-    }
-    window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('keyup', onKeyUp)
-
-    // Animation loop — with frame budget
+    const el = mountRef.current; if (!el) return
+    const rig = buildRig(el, bodyColor, make, model, bodyType); const { renderer, scene, car, grid, dir, exhaust, sparks } = rig
+    const focused: [boolean] = [false]; const ds: [DrivingState] = [createDrivingState()]; const ks: [KeyState] = [createKeyState()]
+    const cp: [THREE.Vector3] = [new THREE.Vector3(0, 3, -8)]; const cl: [THREE.Vector3] = [new THREE.Vector3(0, 1, 4)]
+    const cam: [THREE.PerspectiveCamera] = [new THREE.PerspectiveCamera(50, el.clientWidth / el.clientHeight, 0.5, 200)]
+    cam[0].position.copy(cp[0])
+    const raf: [number] = [0]; const ht: [number] = [0]; const gt: [number] = [0]; const rt: [ReturnType<typeof setTimeout> | null] = [null]
+    const onFocus = () => { focused[0] = true }; const onBlur = () => { focused[0] = false }
+    el.addEventListener('focus', onFocus); el.addEventListener('blur', onBlur)
+    const onKD = (e: KeyboardEvent) => { if (!focused[0]) return; if (KEYS.includes(e.code)) e.preventDefault(); ks[0] = handleKeyDown(ks[0], e.code) }
+    const onKU = (e: KeyboardEvent) => { ks[0] = handleKeyUp(ks[0], e.code) }
+    window.addEventListener('keydown', onKD); window.addEventListener('keyup', onKU)
     const clock = new THREE.Clock()
-    let rafId = 0
-    let hudTick = 0
-    let groundTick = 0
-
     const animate = () => {
-      rafId = requestAnimationFrame(animate)
+      raf[0] = requestAnimationFrame(animate)
       const dt = Math.min(clock.getDelta(), 0.05)
-
-      // Driving physics
-      stateRef.current = updateDriving(stateRef.current, keysRef.current, dt)
-      const state = stateRef.current
-
-      applyToCarGroup(car, state, dt)
-
-      // Nitro exhaust flames
-      if (state.nitroBoost > 0.05) {
-        exhaust.trigger(state.nitroBoost)
-        exhaust.update(new THREE.Vector3(state.posX, 0, state.posZ), state.heading, state.speed, dt)
-      } else {
-        exhaust.stop()
-        exhaust.update(new THREE.Vector3(state.posX, 0, state.posZ), state.heading, state.speed, dt)
-      }
-
-      // Tire sparks on drift — spawn at rear wheel positions
-      if (state.isDrifting && state.driftIntensity > 0.1) {
-        const rearOffset = 1.35
-        const sideOffset = 0.88
-        const rx = state.posX + Math.cos(state.heading) * sideOffset
-        const lx = state.posX - Math.cos(state.heading) * sideOffset
-        const rz = state.posZ - Math.cos(state.heading + Math.PI / 2) * rearOffset
-        const lz = rz
-        sparks.spawn(rx, rz, state.heading, state.driftIntensity)
-        sparks.spawn(lx, lz, state.heading, state.driftIntensity)
-      }
+      ds[0] = updateDriving(ds[0], ks[0], dt); const s = ds[0]; applyToCarGroup(car, s, dt)
+      if (s.nitroBoost > 0.05) { exhaust.trigger(s.nitroBoost); exhaust.update(new THREE.Vector3(s.posX, 0, s.posZ), s.heading, s.speed, dt) } else { exhaust.stop(); exhaust.update(new THREE.Vector3(s.posX, 0, s.posZ), s.heading, s.speed, dt) }
+      if (s.isDrifting && s.driftIntensity > 0.1) { const rz = s.posZ - Math.cos(s.heading + Math.PI / 2) * 1.35; sparks.spawn(s.posX + Math.cos(s.heading) * 0.88, rz, s.heading, s.driftIntensity); sparks.spawn(s.posX - Math.cos(s.heading) * 0.88, rz, s.heading, s.driftIntensity) }
       sparks.update(dt)
-
-      // Ground update throttled
-      groundTick += dt
-      if (groundTick > 0.5) {
-        groundTick = 0
-        ground.update(state.posX, state.posZ)
-      }
-
-      dir.position.set(state.posX + 5, 10, state.posZ + 5)
-
-      const { camPos, camLook } = updateChaseCamera(
-        camera, state, camPosRef.current, camLookRef.current, dt,
-      )
-      camPosRef.current = camPos
-      camLookRef.current = camLook
-
-      // Camera shake on nitro
-      if (state.nitroBoost > 0.3) {
-        camera.position.x += (Math.random() - 0.5) * 0.025 * state.nitroBoost
-        camera.position.y += (Math.random() - 0.5) * 0.015 * state.nitroBoost
-      }
-
-      renderer.render(scene, camera)
-
-      hudTick += dt
-      if (hudTick > 0.12) {
-        hudTick = 0
-        onSpeedChange?.(Math.abs(Math.round(state.speed * 3.6)))
-        onRevChange?.(state.isRevving)
-        onDriftChange?.(state.isDrifting)
-      }
+      gt[0] += dt; if (gt[0] > 0.1) { gt[0] = 0; grid.position.set(s.posX, -0.45, s.posZ) }
+      dir.position.set(s.posX + 5, 10, s.posZ + 5)
+      const { camPos, camLook } = updateChaseCamera(cam[0], s, cp[0], cl[0], dt); cp[0] = camPos; cl[0] = camLook
+      if (s.nitroBoost > 0.3) cam[0].position.add(new THREE.Vector3((Math.random() - 0.5) * 0.025 * s.nitroBoost, (Math.random() - 0.5) * 0.015 * s.nitroBoost, 0))
+      renderer.render(scene, cam[0])
+      ht[0] += dt; if (ht[0] > 0.12) { ht[0] = 0; onSpeedChange?.(Math.abs(Math.round(s.speed * 3.6))); onRevChange?.(s.isRevving); onDriftChange?.(s.isDrifting) }
     }
     animate()
-
-    // Resize (throttled)
-    let resizeTimer: ReturnType<typeof setTimeout> | null = null
-    const obs = new ResizeObserver(() => {
-      if (resizeTimer) clearTimeout(resizeTimer)
-      resizeTimer = setTimeout(() => {
-        if (!el) return
-        renderer.setSize(el.clientWidth, el.clientHeight)
-        camera.aspect = el.clientWidth / el.clientHeight
-        camera.updateProjectionMatrix()
-      }, 100)
-    })
+    const obs = new ResizeObserver(() => { if (rt[0]) clearTimeout(rt[0]); rt[0] = setTimeout(() => { if (!el) return; renderer.setSize(el.clientWidth, el.clientHeight); const nc = new THREE.PerspectiveCamera(50, el.clientWidth / el.clientHeight, 0.5, 200); nc.position.copy(cp[0]); cam[0] = nc }, 100) })
     obs.observe(el)
-
-    return () => {
-      cancelAnimationFrame(rafId)
-      if (resizeTimer) clearTimeout(resizeTimer)
-      window.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('keyup', onKeyUp)
-      obs.disconnect()
-      exhaust.dispose()
-      sparks.dispose()
-      renderer.dispose()
-      if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement)
-    }
-  }, [onSpeedChange, onRevChange, onDriftChange, bodyColor])
-
-  return (
-    <div
-      ref={mountRef}
-      className={className ?? 'w-full h-full'}
-      tabIndex={0}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      onClick={() => mountRef.current?.focus()}
-      style={{ outline: 'none', cursor: 'pointer' }}
-    />
-  )
+    return () => { cancelAnimationFrame(raf[0]); if (rt[0]) clearTimeout(rt[0]); el.removeEventListener('focus', onFocus); el.removeEventListener('blur', onBlur); window.removeEventListener('keydown', onKD); window.removeEventListener('keyup', onKU); obs.disconnect(); rig.dispose() }
+  }, [onSpeedChange, onRevChange, onDriftChange, bodyColor, make, model, bodyType])
+  return <div ref={mountRef} className={className ?? 'w-full h-full'} tabIndex={0} onClick={handleClick} style={{ outline: 'none', cursor: 'pointer' }} />
 }

@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import Fastify from 'fastify'
 import helmet from '@fastify/helmet'
 import cors from '@fastify/cors'
@@ -11,6 +12,7 @@ import { vehicleRoutes } from './routes/vehicles/index.js'
 import { authRoutes } from './routes/auth/token.js'
 import { userRoutes } from './routes/users/me.js'
 import { subscriptionRoutes } from './routes/subscriptions/index.js'
+import { comparisonRoutes } from './routes/comparisons/index.js'
 
 const app = Fastify({
   logger:
@@ -56,9 +58,10 @@ await app.register(vehicleRoutes, { prefix: '/vehicles' })
 await app.register(authRoutes, { prefix: '/auth' })
 await app.register(userRoutes, { prefix: '/users' })
 await app.register(subscriptionRoutes, { prefix: '/subscriptions' })
+await app.register(comparisonRoutes, { prefix: '/comparisons' })
 
 app.get('/health', async () => ({ status: 'ok' }))
 
 const port = Number(process.env.PORT ?? 3001)
 await app.listen({ port, host: '0.0.0.0' })
-console.log(`API listening on port ${port}`)
+app.log.info(`API listening on port ${port}`)

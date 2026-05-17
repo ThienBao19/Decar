@@ -77,12 +77,12 @@ function applyTierMask(vehicle: NonNullable<VehicleWithRelations>, tier: Subscri
 
 export async function getVehicle(
   prisma: PrismaClient,
-  redis: Redis,
+  redis: Redis | null,
   id: string,
   tier: SubscriptionTier,
 ): Promise<VehicleDetailDTO | null> {
   const cacheKey = `vehicle:${id}`
-  const cached = await redis.get(cacheKey)
+  const cached = await redis?.get(cacheKey)
 
   let raw: NonNullable<VehicleWithRelations> | null
 
@@ -91,15 +91,15 @@ export async function getVehicle(
   } else {
     raw = await queryVehicle(prisma, id)
     if (!raw) return null
-    await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(raw))
+    await redis?.setex(cacheKey, CACHE_TTL, JSON.stringify(raw))
   }
 
   if (!raw) return null
   return applyTierMask(raw, tier)
 }
 
-export async function invalidateVehicleCache(redis: Redis, id: string): Promise<void> {
-  await redis.del(`vehicle:${id}`)
+export async function invalidateVehicleCache(redis: Redis | null, id: string): Promise<void> {
+  await redis?.del(`vehicle:${id}`)
 }
 
 export async function listVehicles(

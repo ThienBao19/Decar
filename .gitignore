@@ -32,3 +32,15 @@ Thumbs.db
 *.md
 !apps/web/src/**/*.md
 !packages/**/*.md
+
+.vercel
+
+# Large 3D binary assets — use Git LFS or external storage
+apps/web/public/models/vehicles/*.glb
+
+# Blender local files — not part of the web app
+blenderkit/
+sedan_model.py
+
+# MCP local config — machine-specific
+.mcp.json

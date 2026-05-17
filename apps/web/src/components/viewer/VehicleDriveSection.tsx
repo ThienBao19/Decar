@@ -3,13 +3,13 @@ import { useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 
 const Viewer = dynamic(
-  () => import('./Porsche911DrivingViewer').then((m) => ({ default: m.Porsche911DrivingViewer })),
+  () => import('./DriveViewer2').then((m) => ({ default: m.DriveViewer2 })),
   { ssr: false, loading: () => <div className='flex h-full items-center justify-center text-[#4d4d4d] text-[13px]'>Loading…</div> },
 )
 
-interface Props { make: string; model: string; bodyColor?: number | undefined }
+interface Props { make: string; model: string; bodyType?: string | null | undefined; bodyColor?: number | undefined }
 
-export function VehicleDriveSection({ make, model, bodyColor }: Props) {
+export function VehicleDriveSection({ make, model, bodyType, bodyColor }: Props) {
   const [speed, setSpeed] = useState(0)
   const [revving, setRevving] = useState(false)
   const [drifting, setDrifting] = useState(false)
@@ -19,7 +19,7 @@ export function VehicleDriveSection({ make, model, bodyColor }: Props) {
 
   return (
     <div className='relative w-full overflow-hidden rounded-xl border border-[#2e2e2e] bg-[#0f0f0f]' style={{ height: 420 }}>
-      <Viewer className='w-full h-full' make={make} model={model} {...(bodyColor !== undefined ? { bodyColor } : {})}
+      <Viewer className='w-full h-full' make={make} model={model} bodyType={bodyType ?? null} {...(bodyColor !== undefined ? { bodyColor } : {})}
         onSpeedChange={onSpeed} onRevChange={onRev} onDriftChange={onDrift} />
       <div className='pointer-events-none absolute bottom-4 left-4 flex items-end gap-3'>
         <div className='rounded-lg border border-[#2e2e2e] bg-[#0f0f0f]/80 px-3 py-2 backdrop-blur-sm'>

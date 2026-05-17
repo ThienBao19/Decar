@@ -4,21 +4,30 @@ import { Redis } from 'ioredis'
 
 declare module 'fastify' {
   interface FastifyInstance {
-    redis: Redis
+    redis: Redis | null
   }
 }
 
 export const redisPlugin = fp(async (app: FastifyInstance) => {
-  const redis = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
-    lazyConnect: true,
-    maxRetriesPerRequest: 3,
-  })
+  const url = process.env.REDIS_URL
+  if (!url) {
+    app.log.warn('REDIS_URL not set — running without Redis cache')
+    app.decorate('redis', null)
+    return
+  }
 
-  await redis.connect()
+  const redis = new Redis(url, { lazyConnect: true, maxRetriesPerRequest: 1, connectTimeout: 3000 })
 
-  app.decorate('redis', redis)
-
-  app.addHook('onClose', async () => {
-    await redis.quit()
-  })
+  try {
+    await redis.connect()
+    app.decorate('redis', redis)
+    app.addHook('onClose', async () => {
+      await redis.quit()
+    })
+    app.log.info('Redis connected')
+  } catch {
+    app.log.warn('Redis connection failed — running without cache')
+    redis.disconnect()
+    app.decorate('redis', null)
+  }
 })
