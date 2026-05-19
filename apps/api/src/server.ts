@@ -1,4 +1,9 @@
 import 'dotenv/config'
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[server] unhandledRejection:', reason)
+})
+
 import Fastify from 'fastify'
 import helmet from '@fastify/helmet'
 import cors from '@fastify/cors'
