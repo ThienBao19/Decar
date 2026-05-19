@@ -10,6 +10,13 @@ declare module 'next-auth' {
       image?: string | null
       tier: SubscriptionTier
       subscriptionStatus: SubscriptionStatus
+      isAdmin: boolean
     }
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    isAdmin?: boolean
   }
 }
