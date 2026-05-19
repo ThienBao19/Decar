@@ -16,14 +16,19 @@ export const redisPlugin = fp(async (app: FastifyInstance) => {
     return
   }
 
-  const redis = new Redis(url, { lazyConnect: true, maxRetriesPerRequest: 1, connectTimeout: 3000 })
+  const redis = new Redis(url, {
+    lazyConnect: true,
+    maxRetriesPerRequest: 1,
+    connectTimeout: 3000,
+    retryStrategy: () => null,
+  })
+
+  redis.on('error', () => {})
 
   try {
     await redis.connect()
     app.decorate('redis', redis)
-    app.addHook('onClose', async () => {
-      await redis.quit()
-    })
+    app.addHook('onClose', async () => { await redis.quit() })
     app.log.info('Redis connected')
   } catch {
     app.log.warn('Redis connection failed — running without cache')
