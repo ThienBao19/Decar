@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import { writeFileSync } from 'fs'
 
 const neon = new PrismaClient({
-  datasources: { db: { url: process.env.NEON_DATABASE_URL } }
+  datasources: { db: { url: process.env.NEON_DATABASE_URL! } }
 })
 
 function esc(s: string | null | undefined): string {
