@@ -27,3 +27,24 @@ export type {
   CheckoutSessionResponse,
   AuthTokenResponse,
 } from './types/api.types'
+
+export type {
+  PartCategory,
+  PartTier,
+  WheelFinish,
+  PaintFinish,
+  WrapType,
+  WindowTint,
+  PartDef,
+  WheelPartDef,
+  PaintConfig,
+  BuildConfig,
+  VehicleBuildDTO,
+  SlotPosition,
+  SlotMap,
+  CreateBuildRequest,
+  UpdateBuildRequest,
+} from './types/builder'
+
+export type { VehicleCategory, VehicleCategoryMeta } from './types/vehicle-base.types'
+export { VEHICLE_CATEGORIES } from './types/vehicle-base.types'

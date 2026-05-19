@@ -36,13 +36,13 @@
     "react-pdf": "^9.0.0",
     "stripe": "^16.2.0",
     "tailwind-merge": "^2.6.1",
-    "three": "^0.184.0"
+    "three": "^0.184.0",
+    "zustand": "^5.0.13"
   },
   "prisma": {
     "schema": "../api/prisma/schema.prisma"
   },
   "devDependencies": {
-    "prisma": "^5.16.0",
     "@playwright/test": "^1.45.0",
     "@types/node": "^20.14.0",
     "@types/react": "^18.3.0",
@@ -54,6 +54,7 @@
     "eslint-config-next": "14.2.5",
     "postcss": "^8.4.0",
     "prettier-plugin-tailwindcss": "^0.6.0",
+    "prisma": "^5.16.0",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.5.0",
     "vitest": "^2.0.0"

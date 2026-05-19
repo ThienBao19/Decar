@@ -40,6 +40,12 @@ export async function Navbar() {
           >
             Pricing
           </Link>
+          <Link
+            href="/builder"
+            className="text-[14px] font-medium text-[#898989] transition-colors hover:text-[#fafafa]"
+          >
+            Builder
+          </Link>
         </nav>
 
         {/* Auth area */}

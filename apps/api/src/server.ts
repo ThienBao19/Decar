@@ -13,6 +13,7 @@ import { authRoutes } from './routes/auth/token.js'
 import { userRoutes } from './routes/users/me.js'
 import { subscriptionRoutes } from './routes/subscriptions/index.js'
 import { comparisonRoutes } from './routes/comparisons/index.js'
+import { buildRoutes } from './routes/builds/index.js'
 
 const app = Fastify({
   logger:
@@ -59,6 +60,7 @@ await app.register(authRoutes, { prefix: '/auth' })
 await app.register(userRoutes, { prefix: '/users' })
 await app.register(subscriptionRoutes, { prefix: '/subscriptions' })
 await app.register(comparisonRoutes, { prefix: '/comparisons' })
+await app.register(buildRoutes, { prefix: '/builds' })
 
 app.get('/health', async () => ({ status: 'ok' }))
 

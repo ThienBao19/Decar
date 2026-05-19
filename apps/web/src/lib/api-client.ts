@@ -47,6 +47,17 @@ class ApiClient {
     return json.data
   }
 
+  async patch<T>(path: string, body: unknown, options?: { session?: Session | null }): Promise<T> {
+    const headers = await getAuthHeaders(this.baseUrl, options?.session)
+    const res = await fetch(`${this.baseUrl}${path}`, { method: 'PATCH', headers, body: JSON.stringify(body) })
+    if (!res.ok) {
+      const errBody = (await res.json().catch(() => ({}))) as { error?: string }
+      throw new Error(errBody.error ?? `API error ${res.status}`)
+    }
+    const json = (await res.json()) as { data: T }
+    return json.data
+  }
+
   async del(path: string, options?: { session?: Session | null }): Promise<void> {
     const headers = await getAuthHeaders(this.baseUrl, options?.session)
     const res = await fetch(`${this.baseUrl}${path}`, { method: 'DELETE', headers })
