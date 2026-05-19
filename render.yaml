@@ -1,0 +1,35 @@
+﻿services:
+  - type: web
+    name: decar-api
+    runtime: node
+    region: singapore
+    plan: free
+    rootDir: .
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @decar/api run db:generate && pnpm --filter @decar/api run build
+    startCommand: node apps/api/dist/src/server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: NEXTAUTH_SECRET
+        sync: false
+      - key: API_INTERNAL_SECRET
+        sync: false
+      - key: ALLOWED_ORIGIN
+        value: https://decar-web-83dj.vercel.app
+      - key: WEB_URL
+        value: https://decar-web-83dj.vercel.app
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRO_PRICE_ID
+        sync: false
