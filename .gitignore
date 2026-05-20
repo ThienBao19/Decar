@@ -44,3 +44,5 @@ sedan_model.py
 
 # MCP local config — machine-specific
 .mcp.json
+
+.vercel
