@@ -30,6 +30,7 @@ Thumbs.db
 
 # Markdown rule/design docs — local only
 *.md
+!README.md
 !apps/web/src/**/*.md
 !packages/**/*.md
 
