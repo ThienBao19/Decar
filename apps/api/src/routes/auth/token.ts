@@ -6,7 +6,7 @@ const bodySchema = z.object({
   userId: z.string().min(1),
 })
 
-export async function authRoutes(app: FastifyInstance) {
+export function authRoutes(app: FastifyInstance): Promise<void> {
   app.post('/token', {
     config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
     handler: async (req, reply) => {
@@ -36,4 +36,5 @@ export async function authRoutes(app: FastifyInstance) {
       })
     },
   })
+  return Promise.resolve()
 }

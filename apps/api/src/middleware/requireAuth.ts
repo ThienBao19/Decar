@@ -17,7 +17,7 @@ declare module '@fastify/jwt' {
 export async function requireAuth(req: FastifyRequest, reply: FastifyReply): Promise<void> {
   try {
     await req.jwtVerify()
-    const raw = req.user as JwtPayload
+    const raw = req.user
 
     // Re-verify tier from Redis — never trust JWT tier (stale after subscription change)
     let resolvedTier: 'FREE' | 'PRO' = raw.tier

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { requireAuth } from '../../middleware/requireAuth.js'
 
-export async function userRoutes(app: FastifyInstance) {
+export function userRoutes(app: FastifyInstance): Promise<void> {
   app.get('/me', {
     preHandler: [requireAuth],
     handler: async (req, reply) => {
@@ -43,4 +43,5 @@ export async function userRoutes(app: FastifyInstance) {
       })
     },
   })
+  return Promise.resolve()
 }

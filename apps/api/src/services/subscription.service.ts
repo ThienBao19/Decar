@@ -77,7 +77,7 @@ export async function handleWebhookEvent(
 ): Promise<void> {
   switch (event.type) {
     case 'checkout.session.completed': {
-      const session = event.data.object as Stripe.Checkout.Session
+      const session = event.data.object
       const userId = session.metadata?.userId
       if (!userId || !session.subscription) break
 
@@ -94,7 +94,7 @@ export async function handleWebhookEvent(
     }
 
     case 'customer.subscription.updated': {
-      const sub = event.data.object as Stripe.Subscription
+      const sub = event.data.object
       const userId = await resolveUserId(prisma, sub.customer as string)
       if (!userId) break
 
@@ -112,7 +112,7 @@ export async function handleWebhookEvent(
     }
 
     case 'customer.subscription.deleted': {
-      const sub = event.data.object as Stripe.Subscription
+      const sub = event.data.object
       const userId = await resolveUserId(prisma, sub.customer as string)
       if (!userId) break
 
@@ -125,7 +125,7 @@ export async function handleWebhookEvent(
     }
 
     case 'invoice.payment_failed': {
-      const invoice = event.data.object as Stripe.Invoice
+      const invoice = event.data.object
       const userId = await resolveUserId(prisma, invoice.customer as string)
       if (!userId) break
 
