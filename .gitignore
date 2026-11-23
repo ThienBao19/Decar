@@ -38,7 +38,6 @@ Thumbs.db
 .vercel
 
 # Large 3D binary assets — use Git LFS or external storage
-apps/web/public/models/vehicles/*.glb
 
 # Blender local files — not part of the web app
 blenderkit/
@@ -48,3 +47,7 @@ sedan_model.py
 .mcp.json
 
 .vercel
+
+# Local model backups / non-commercial models kept out of public/
+.model-originals/
+.model-quarantine/

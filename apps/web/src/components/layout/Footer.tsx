@@ -47,6 +47,9 @@ export function Footer() {
               <Link href="/privacy" className="text-[13px] text-[#898989] hover:text-[#fafafa]">
                 Privacy
               </Link>
+              <Link href="/credits" className="text-[13px] text-[#898989] hover:text-[#fafafa]">
+                3D Credits
+              </Link>
             </div>
           </nav>
         </div>
