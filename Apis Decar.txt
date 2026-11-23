@@ -1,0 +1,90 @@
+Apis Decar
+
+UI          → Next.js + Tailwind + Radix UI + Framer Motion
+3D          → Three.js + Spline + Draco (Google CDN)
+Auth        → NextAuth + Google/GitHub OAuth + JWT
+DB          → PostgreSQL + Prisma (ORM)
+Cache       → Redis + ioredis
+Search      → Elasticsearch
+Payment     → Stripe
+Storage     → Cloudflare R2 + AWS SDK
+Validation  → Zod
+Logging     → Pino
+Testing     → Vitest + Playwright
+
+Core Framework
+Thư viện	Version	Dùng để làm gì
+next	14.2.5	Framework chính — routing, SSR, ISR
+react	18.3	UI components
+typescript	5.5	Type safety
+Authentication
+Thư viện	Version	Dùng để làm gì
+next-auth	4.24	OAuth login (Google, GitHub, Email)
+@auth/prisma-adapter	2.4	Lưu session vào PostgreSQL
+bcryptjs	2.4	Hash password
+UI & Styling
+Thư viện	Version	Dùng để làm gì
+tailwindcss	3.4	Utility-first CSS
+@radix-ui/react-*	1.x-2.x	Accessible UI primitives (Dialog, Tabs, Toast...)
+lucide-react	0.400	Icons
+class-variance-authority	0.7	Variant-based component styling
+clsx + tailwind-merge	-	Merge class names an toàn
+framer-motion	12	Animations
+gsap	3.15	Advanced animations (hero section)
+3D & Visualization
+Thư viện	Version	Dùng để làm gì
+three	0.184	3D rendering (WebGL)
+@types/three	0.184	TypeScript types cho Three.js
+@splinetool/react-spline	4.1	Spline 3D scenes embed
+@splinetool/runtime	1.12	Runtime cho Spline
+Payment
+Thư viện	Version	Dùng để làm gì
+@stripe/stripe-js	4.1	Stripe.js client (redirect to checkout)
+stripe	16.2	Stripe SDK (server-side trong API routes)
+State & Data
+Thư viện	Version	Dùng để làm gì
+zustand	5.0	Global state management
+@prisma/client	5.16	DB client (dùng trong Server Components)
+Document
+Thư viện	Version	Dùng để làm gì
+react-pdf	9.0	Render PDF export (Pro feature)
+Dev & Testing
+Thư viện	Version	Dùng để làm gì
+vitest	2.0	Unit testing
+@playwright/test	1.45	E2E testing
+eslint	8.57	Linting
+BACKEND (apps/api)
+Core Framework
+Thư viện	Version	Dùng để làm gì
+fastify	4.28	HTTP server framework
+fastify-plugin	4.5	Plugin encapsulation escape
+tsx	4.16	Run TypeScript trực tiếp (dev mode)
+pino + pino-pretty	9.2	Structured logging
+dotenv	17	Load .env variables
+Fastify Plugins
+Thư viện	Version	Dùng để làm gì
+@fastify/jwt	8.0	JWT sign + verify
+@fastify/cors	9.0	Cross-Origin requests
+@fastify/helmet	11.1	Security headers (XSS, CSP...)
+@fastify/rate-limit	9.1	Rate limiting 30/100 req/min
+@fastify/sensible	5.6	Error helpers, utilities
+Database & ORM
+Thư viện	Version	Dùng để làm gì
+@prisma/client	5.16	Type-safe PostgreSQL queries
+prisma	5.16	Migrations, schema management
+Cache
+Thư viện	Version	Dùng để làm gì
+ioredis	5.4	Redis client (tier cache, vehicle cache)
+Search
+Thư viện	Version	Dùng để làm gì
+@elastic/elasticsearch	8.14	Elasticsearch client
+Storage
+Thư viện	Version	Dùng để làm gì
+@aws-sdk/client-s3	3.600	S3/R2 file operations
+@aws-sdk/s3-request-presigner	3.600	Tạo presigned URL
+Payment
+Thư viện	Version	Dùng để làm gì
+stripe	16.2	Stripe checkout, webhook verify
+Validation
+Thư viện	Version	Dùng để làm gì
+zod	3.23	Schema validation cho request body
