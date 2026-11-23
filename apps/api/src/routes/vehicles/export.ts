@@ -81,8 +81,8 @@ ${v.engine ? `
   <tr><td>Displacement</td><td>${v.engine.displacement}L</td></tr>
   <tr><td>Cylinders</td><td>${v.engine.cylinders}</td></tr>
   <tr><td>Fuel type</td><td>${escHtml(v.engine.fuelType)}</td></tr>
-  <tr><td>Power</td><td>${v.engine.powerKw} kW (${Math.round(v.engine.powerKw * 1.341)} hp)</td></tr>
-  <tr><td>Torque</td><td>${v.engine.torqueNm} Nm</td></tr>
+  <tr><td>Power</td><td>${v.engine.powerKw > 0 ? `${v.engine.powerKw} kW (${Math.round(v.engine.powerKw * 1.341)} hp)` : '—'}</td></tr>
+  <tr><td>Torque</td><td>${v.engine.torqueNm > 0 ? `${v.engine.torqueNm} Nm` : '—'}</td></tr>
   <tr><td>Transmission</td><td>${escHtml(v.engine.transmission)}</td></tr>
   <tr><td>Drivetrain</td><td>${escHtml(v.engine.drivetrain)}</td></tr>
 </table>` : ''}
