@@ -2,6 +2,13 @@ import Link from 'next/link'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NavbarClient } from './NavbarClient'
+import { MobileNav } from './MobileNav'
+
+const NAV_LINKS = [
+  { href: '/vehicles', label: 'Vehicles' },
+  { href: '/pricing', label: 'Pricing' },
+  { href: '/builder', label: 'Builder' },
+]
 
 export async function Navbar() {
   const session = await getServerSession(authOptions)
@@ -28,28 +35,22 @@ export async function Navbar() {
 
         {/* Nav links */}
         <nav className="hidden items-center gap-6 md:flex">
-          <Link
-            href="/vehicles"
-            className="text-[14px] font-medium text-[#898989] transition-colors hover:text-[#fafafa]"
-          >
-            Vehicles
-          </Link>
-          <Link
-            href="/pricing"
-            className="text-[14px] font-medium text-[#898989] transition-colors hover:text-[#fafafa]"
-          >
-            Pricing
-          </Link>
-          <Link
-            href="/builder"
-            className="text-[14px] font-medium text-[#898989] transition-colors hover:text-[#fafafa]"
-          >
-            Builder
-          </Link>
+          {NAV_LINKS.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="text-[14px] font-medium text-[#898989] transition-colors hover:text-[#fafafa]"
+            >
+              {l.label}
+            </Link>
+          ))}
         </nav>
 
         {/* Auth area */}
-        <NavbarClient session={session} />
+        <div className="flex items-center gap-2">
+          <NavbarClient session={session} />
+          <MobileNav links={NAV_LINKS} />
+        </div>
       </div>
     </header>
   )

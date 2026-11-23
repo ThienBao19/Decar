@@ -30,7 +30,7 @@ export function buildRig(el: HTMLDivElement, bodyColor?: number, make?: string, 
     const center = box.getCenter(new THREE.Vector3())
     m.position.sub(center.multiplyScalar(scale)); m.position.setY(0); car.add(m); draco.dispose()
   }, undefined, () => {
-    import('../porsche911/build-porsche911').then(({ buildPorsche911 }) => car.add(buildPorsche911(bodyColor)))
+    void import('../porsche911/build-porsche911').then(({ buildPorsche911 }) => car.add(buildPorsche911(bodyColor)))
   })
   return { renderer, scene, car, grid, dir, exhaust, sparks, dispose: () => { exhaust.dispose(); sparks.dispose(); renderer.dispose(); if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement) } }
 }

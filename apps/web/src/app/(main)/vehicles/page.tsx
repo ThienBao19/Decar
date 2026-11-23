@@ -1,6 +1,5 @@
 ﻿import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 import { searchVehicles, getPopularMakes, getYearRange } from '@/lib/vehicle-cache'
 import { VehicleSearchForm } from '@/components/vehicle/VehicleSearchForm'
 import { getVehicleThumbnailUrl } from '@/lib/vehicle-images'

@@ -2,11 +2,12 @@
 
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { VEHICLE_CATEGORIES } from '@decar/shared'
 
 import { useBuilderStore } from '@/store/builder-store'
+import { builderApi } from '@/lib/builder-api'
 import { PartsPanel } from '@/components/builder/PartsPanel'
 import { PerformanceBar } from '@/components/builder/PerformanceBar'
 
@@ -19,8 +20,9 @@ export default function BuilderPage() {
   const router = useRouter()
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [copyDone, setCopyDone] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
-  const { config, isDirty, isSaving, saveError, savedId, setBaseBody, setName, save } = useBuilderStore(
+  const { config, isDirty, isSaving, saveError, savedId, setBaseBody, setName, save, loadSaved } = useBuilderStore(
     useShallow((s) => ({
       config: s.config,
       isDirty: s.isDirty,
@@ -30,8 +32,21 @@ export default function BuilderPage() {
       setBaseBody: s.setBaseBody,
       setName: s.setName,
       save: s.save,
+      loadSaved: s.loadSaved,
     })),
   )
+
+  // Read ?id from window instead of useSearchParams to avoid a Suspense bailout on this client page
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('id')
+    if (!id) return
+    loadSaved(id)
+      .then(() => {
+        const ownId = useBuilderStore.getState().savedId
+        if (ownId) setShareUrl(`${window.location.origin}/builder?id=${ownId}`)
+      })
+      .catch(() => setLoadError('Could not load this build. It may be private or deleted.'))
+  }, [loadSaved])
 
   const handleSave = useCallback(async () => {
     try {
@@ -44,11 +59,12 @@ export default function BuilderPage() {
   }, [save])
 
   const handleCopyLink = useCallback(async () => {
-    if (!shareUrl) return
+    if (!shareUrl || !savedId) return
+    await builderApi.update(savedId, { isPublic: true })
     await navigator.clipboard.writeText(shareUrl)
     setCopyDone(true)
     setTimeout(() => setCopyDone(false), 2000)
-  }, [shareUrl])
+  }, [shareUrl, savedId])
 
   const handleDriveIt = () => router.push('/drive')
 
@@ -68,18 +84,19 @@ export default function BuilderPage() {
           />
         </div>
         <div className='flex items-center gap-2'>
+          {loadError && <span className='text-[10px] text-[#ff4444]'>{loadError}</span>}
           {saveError && <span className='text-[10px] text-[#ff4444]'>{saveError}</span>}
           {isDirty && !isSaving && <span className='text-[10px] text-[#555]'>unsaved</span>}
           {savedId && shareUrl && (
             <button
-              onClick={handleCopyLink}
+              onClick={() => void handleCopyLink()}
               className='rounded-md border border-[#2e2e2e] bg-[#111] px-3 py-1.5 text-[11px] text-[#888] transition hover:text-[#ccc]'
             >
               {copyDone ? 'Copied!' : 'Share Link'}
             </button>
           )}
           <button
-            onClick={handleSave}
+            onClick={() => void handleSave()}
             disabled={isSaving || !isDirty}
             className={[
               'rounded-md border px-4 py-1.5 text-[12px] transition',

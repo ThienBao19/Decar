@@ -17,10 +17,10 @@ function buildApp(overrides: { subscriptionResult?: { tier: string } | null } = 
   }
 
   const app = Fastify({ logger: false })
-  app.register(rateLimit, { max: 200, timeWindow: '1 minute' })
-  app.register(jwt, { secret: 'test-jwt-secret-32-chars-minimum' })
+  void app.register(rateLimit, { max: 200, timeWindow: '1 minute' })
+  void app.register(jwt, { secret: 'test-jwt-secret-32-chars-minimum' })
   app.decorate('prisma', mockPrisma as unknown as PrismaClient)
-  app.register(authRoutes, { prefix: '/auth' })
+  void app.register(authRoutes, { prefix: '/auth' })
 
   return { app, mockPrisma }
 }
@@ -87,11 +87,11 @@ describe('POST /auth/token', () => {
     })
 
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { data: { accessToken: string; expiresIn: number } }
+    const body = res.json<{ data: { accessToken: string; expiresIn: number } }>()
     expect(body.data.accessToken).toBeTruthy()
     expect(body.data.expiresIn).toBe(900)
 
-    const decoded = app.jwt.verify(body.data.accessToken) as { userId: string; tier: string }
+    const decoded = app.jwt.verify<{ userId: string; tier: string }>(body.data.accessToken)
     expect(decoded.userId).toBe('user_1')
     expect(decoded.tier).toBe('FREE')
   })
@@ -107,8 +107,8 @@ describe('POST /auth/token', () => {
     })
 
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { data: { accessToken: string } }
-    const decoded = app.jwt.verify(body.data.accessToken) as { tier: string }
+    const body = res.json<{ data: { accessToken: string } }>()
+    const decoded = app.jwt.verify<{ tier: string }>(body.data.accessToken)
     expect(decoded.tier).toBe('PRO')
   })
 
@@ -123,8 +123,8 @@ describe('POST /auth/token', () => {
     })
 
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { data: { accessToken: string } }
-    const decoded = app.jwt.verify(body.data.accessToken) as { tier: string }
+    const body = res.json<{ data: { accessToken: string } }>()
+    const decoded = app.jwt.verify<{ tier: string }>(body.data.accessToken)
     expect(decoded.tier).toBe('FREE')
   })
 })

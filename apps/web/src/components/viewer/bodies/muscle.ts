@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type { SlotMap } from '@decar/shared'
-import { bodyMat, glassMat, trimMat, chromeMat, plasticMat, buildHeadlightRect, buildTaillightRect, addWheels } from './shared'
+import { bodyMat, glassMat, trimMat, plasticMat, buildHeadlightRect, buildTaillightRect, addWheels } from './shared'
 
 const WB = 1.52
 

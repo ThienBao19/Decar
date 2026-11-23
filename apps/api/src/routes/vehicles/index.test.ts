@@ -48,11 +48,11 @@ function buildApp() {
     setex: vi.fn(),
   }
   const app = Fastify({ logger: false })
-  app.register(rateLimit, { max: 1000, timeWindow: '1 minute' })
-  app.register(jwt, { secret: 'test-secret-32-chars-minimum-ok' })
+  void app.register(rateLimit, { max: 1000, timeWindow: '1 minute' })
+  void app.register(jwt, { secret: 'test-secret-32-chars-minimum-ok' })
   app.decorate('prisma', mockPrisma as unknown as PrismaClient)
   app.decorate('redis', mockRedis as unknown as Redis)
-  app.register(vehicleRoutes, { prefix: '/vehicles' })
+  void app.register(vehicleRoutes, { prefix: '/vehicles' })
   return { app, mockPrisma, mockRedis }
 }
 
@@ -67,7 +67,7 @@ describe('GET /vehicles', () => {
     const res = await app.inject({ method: 'GET', url: '/vehicles' })
 
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { data: unknown[]; total: number }
+    const body = res.json<{ data: unknown[]; total: number }>()
     expect(body.data).toHaveLength(1)
     expect(body.total).toBe(1)
   })
@@ -110,7 +110,7 @@ describe('GET /vehicles/:id', () => {
     const res = await app.inject({ method: 'GET', url: '/vehicles/veh_1' })
 
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { data: typeof VEHICLE_DETAIL }
+    const body = res.json<{ data: typeof VEHICLE_DETAIL }>()
     expect(body.data.id).toBe('veh_1')
     expect(getVehicle).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'veh_1', 'FREE')
   })
@@ -194,7 +194,7 @@ describe('GET /vehicles/:id/media', () => {
     })
 
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { data: typeof signedMedia }
+    const body = res.json<{ data: typeof signedMedia }>()
     expect(body.data[0]!.url).toMatch(/^https:\/\//)
   })
 

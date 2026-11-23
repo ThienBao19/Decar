@@ -42,11 +42,11 @@ function buildApp() {
   } as unknown as Redis
 
   const app = Fastify({ logger: false })
-  app.register(rateLimit, { max: 1000, timeWindow: '1 minute' })
-  app.register(jwt, { secret: 'test-secret-32-chars-minimum-ok!' })
+  void app.register(rateLimit, { max: 1000, timeWindow: '1 minute' })
+  void app.register(jwt, { secret: 'test-secret-32-chars-minimum-ok!' })
   app.decorate('prisma', mockPrisma)
   app.decorate('redis',  mockRedis)
-  app.register(subscriptionRoutes, { prefix: '/subscriptions' })
+  void app.register(subscriptionRoutes, { prefix: '/subscriptions' })
   return { app }
 }
 
@@ -76,7 +76,7 @@ describe('POST /subscriptions/checkout', () => {
     })
 
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { data: { url: string } }
+    const body = res.json<{ data: { url: string } }>()
     expect(body.data.url).toBe('https://checkout.stripe.com/pay/test_session')
     expect(createCheckoutSession).toHaveBeenCalledWith(
       expect.anything(),
@@ -128,7 +128,7 @@ describe('POST /subscriptions/portal', () => {
     })
 
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { data: { url: string } }
+    const body = res.json<{ data: { url: string } }>()
     expect(body.data.url).toBe('https://billing.stripe.com/session/test_portal')
     expect(getBillingPortalUrl).toHaveBeenCalledWith(
       expect.anything(),
@@ -171,7 +171,7 @@ describe('POST /subscriptions/webhook', () => {
     })
 
     expect(res.statusCode).toBe(400)
-    const body = res.json() as { error: string }
+    const body = res.json<{ error: string }>()
     expect(body.error).toMatch(/stripe-signature/i)
   })
 
@@ -194,7 +194,7 @@ describe('POST /subscriptions/webhook', () => {
     })
 
     expect(res.statusCode).toBe(400)
-    const body = res.json() as { error: string }
+    const body = res.json<{ error: string }>()
     expect(body.error).toMatch(/invalid/i)
   })
 
@@ -246,7 +246,7 @@ describe('POST /subscriptions/webhook', () => {
     })
 
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { received: boolean }
+    const body = res.json<{ received: boolean }>()
     expect(body.received).toBe(true)
   })
 })

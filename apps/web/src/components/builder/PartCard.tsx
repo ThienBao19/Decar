@@ -6,7 +6,7 @@ interface Props {
   part: PartDef
   selected: boolean
   locked: boolean
-  onSelect(): void
+  onSelect: () => void
 }
 
 const TIER_COLOR: Record<string, string> = {

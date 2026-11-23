@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { PricingCard } from '@/components/pricing/PricingCard'
+import { PRO_MONTHLY_PRICE_USD } from '@/lib/pricing'
 
 export const metadata: Metadata = { title: 'Pricing — Decar' }
 
@@ -79,7 +80,7 @@ export default async function PricingPage() {
         />
         <PricingCard
           tier="PRO"
-          price={9}
+          price={PRO_MONTHLY_PRICE_USD}
           current={currentTier === 'PRO'}
           features={PRO_FEATURES}
           cta="Upgrade to Pro"

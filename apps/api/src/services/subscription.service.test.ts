@@ -1,7 +1,7 @@
 ﻿import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { PrismaClient } from '@prisma/client'
 import type { Redis } from 'ioredis'
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 
 // ---------------------------------------------------------------------------
 // Hoisted Stripe mock — vi.hoisted runs before vi.mock hoisting

@@ -67,7 +67,7 @@ await app.register(subscriptionRoutes, { prefix: '/subscriptions' })
 await app.register(comparisonRoutes, { prefix: '/comparisons' })
 await app.register(buildRoutes, { prefix: '/builds' })
 
-app.get('/health', async () => ({ status: 'ok' }))
+app.get('/health', () => ({ status: 'ok' }))
 
 const port = Number(process.env.PORT ?? 3001)
 await app.listen({ port, host: '0.0.0.0' })

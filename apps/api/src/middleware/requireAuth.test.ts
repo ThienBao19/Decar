@@ -12,13 +12,13 @@ function buildApp({
 } = {}) {
   const app = Fastify({ logger: false })
 
-  app.register(jwt, { secret: 'test-secret-32-chars-minimum-ok' })
+  void app.register(jwt, { secret: 'test-secret-32-chars-minimum-ok' })
   app.decorate('redis', { get: redisGet, setex: redisSetex } as unknown as Redis)
   app.decorate('prisma', {
     subscription: { findUnique: prismaFindUnique },
   } as unknown as PrismaClient)
 
-  app.get('/protected', { preHandler: requireAuth }, async (req) => ({
+  app.get('/protected', { preHandler: [requireAuth] }, (req) => ({
     userId: req.user.userId,
     tier: req.user.tier,
   }))
