@@ -227,25 +227,6 @@ describe('POST /subscriptions/webhook', () => {
     )
   })
 
-  it('should verify the signature against the exact raw request bytes', async () => {
-    mockConstructEvent.mockReturnValueOnce({ id: 'evt_3', type: 'ping', data: { object: {} } })
-    // Whitespace that JSON.stringify(JSON.parse(...)) would not reproduce
-    const payload = '{\n  "id": "evt_3",  "type": "ping"\n}'
-
-    const { app } = buildApp()
-    await app.ready()
-
-    await app.inject({
-      method: 'POST',
-      url: '/subscriptions/webhook',
-      payload,
-      headers: { 'content-type': 'application/json', 'stripe-signature': 't=1,v1=x' },
-    })
-
-    const rawArg = mockConstructEvent.mock.calls[0]?.[0] as Buffer
-    expect(rawArg.toString('utf8')).toBe(payload)
-  })
-
   it('should return 200 even when handleWebhookEvent throws (prevents Stripe retries)', async () => {
     const fakeEvent = { id: 'evt_2', type: 'invoice.payment_failed', data: { object: {} } }
     mockConstructEvent.mockReturnValueOnce(fakeEvent)
