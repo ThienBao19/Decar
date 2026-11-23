@@ -10,7 +10,7 @@ import { VehicleImageGallery } from '@/components/vehicle/VehicleImageGallery'
 import { VehicleDriveSection } from '@/components/viewer/VehicleDriveSection'
 import { SaveComparisonButton } from '@/components/vehicle/SaveComparisonButton'
 import { formatPower, formatTorque } from '@/lib/engine-format'
-import { getStudioModel } from '@/lib/studio-models'
+import { getStudioModel } from '@/lib/model-registry'
 const StudioViewer = dynamic(
   () => import('@/components/viewer/StudioViewer').then((m) => m.StudioViewer),
   {

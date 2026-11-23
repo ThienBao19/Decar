@@ -31,7 +31,7 @@ export default function PreviewP911() {
         </header>
 
         <model-viewer
-          src="/models/porsche911.glb?v=20260521-3"
+          src="/models/porsche-911-992.glb"
           camera-controls=""
           auto-rotate=""
           auto-rotate-delay="0"

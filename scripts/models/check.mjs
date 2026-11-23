@@ -1,84 +1,91 @@
-// Fails when a GLB under apps/web/public/models breaks the asset rules:
-// missing credit entry, non-commercial or unknown license, external textures,
-// or size/triangle budgets. UNVERIFIED licenses only warn.
-import { readFile, readdir, stat } from 'node:fs/promises'
+// pnpm models:check — runs in CI without LFS sources. Fails when build output
+// doesn't match the manifests and lock file, so every published model is
+// reproducible from assets/ and nothing is edited by hand.
+import { existsSync } from 'node:fs'
+import { readFile, readdir } from 'node:fs/promises'
 import path from 'node:path'
 
-import { CREDITS_FILE, MAX_BYTES, MAX_TRIANGLES, MODELS_DIR } from './budgets.mjs'
+import {
+  ENVS_OUT_DIR, LOCK_FILE, MAX_BYTES, MODELS_OUT_DIR, REGISTRY_FILE, isLfsPointer, loadAssets, maxTrianglesFor,
+  modelConfigHash, readGlbJson, renderRegistry, sha256,
+} from './lib.mjs'
 
-const ALLOWED_LICENSES = new Set(['CC0-1.0', 'CC-BY-4.0', 'Proprietary', 'Purchased'])
-
-// Over the triangle budget on purpose; keep the reason next to the exception
-const TRIANGLE_EXCEPTIONS = {
-  'vehicles/ferrari_488.glb': 'hundreds of tiny disconnected parts; simplification cannot reduce it further',
+function checkStudioNames(manifest, materialNames, errors) {
+  const studio = manifest.studio
+  if (!studio) return
+  const keys = [
+    ...Object.keys(studio.materials ?? {}),
+    ...(studio.paint?.materials ?? []),
+    ...(studio.lights?.head ?? []),
+    ...(studio.lights?.tail ?? []),
+  ]
+  const lower = materialNames.map((n) => n.toLowerCase())
+  for (const key of new Set(keys)) {
+    if (!lower.some((n) => n.includes(key.toLowerCase()))) {
+      errors.push(`${manifest.id}: studio key "${key}" matches no material in the model`)
+    }
+  }
 }
 
-async function listGlbs(dir) {
-  const entries = await readdir(dir, { withFileTypes: true })
-  const nested = await Promise.all(
-    entries.map((e) => {
-      const full = path.join(dir, e.name)
-      if (e.isDirectory()) return listGlbs(full)
-      return e.name.endsWith('.glb') ? [full] : []
-    }),
-  )
-  return nested.flat()
+async function checkModel({ manifest, source }, entry, errors, warnings) {
+  const id = manifest.id
+  const outPath = path.join(MODELS_OUT_DIR, `${id}.glb`)
+  if (!entry) return errors.push(`${id}: not in models.lock.json, run pnpm models:build`)
+  if (!existsSync(outPath)) return errors.push(`${id}: missing output ${id}.glb, run pnpm models:build`)
+
+  const out = await readFile(outPath)
+  if (sha256(out) !== entry.outputHash) errors.push(`${id}: output differs from the lock (edited by hand?), run pnpm models:build`)
+  if (entry.configHash !== modelConfigHash(manifest)) errors.push(`${id}: build config changed, run pnpm models:build`)
+  if (existsSync(source)) {
+    const src = await readFile(source)
+    if (!isLfsPointer(src) && sha256(src) !== entry.sourceHash) errors.push(`${id}: source.glb changed, run pnpm models:build`)
+  } else {
+    errors.push(`${id}: assets/models/${id}/source.glb is missing`)
+  }
+
+  const json = readGlbJson(out)
+  const external = (json.images ?? []).filter((img) => img.uri && !img.uri.startsWith('data:'))
+  if (external.length) errors.push(`${id}: references external textures`)
+  if (out.length > MAX_BYTES) errors.push(`${id}: ${Math.round(out.length / 1024)}KB exceeds ${MAX_BYTES / 1024}KB`)
+  if (entry.triangles > maxTrianglesFor(manifest)) errors.push(`${id}: ${entry.triangles} triangles exceeds ${maxTrianglesFor(manifest)}`)
+  checkStudioNames(manifest, (json.materials ?? []).map((m) => m.name ?? ''), errors)
+  if (manifest.credit.license === 'UNVERIFIED') warnings.push(`${id}: license not verified yet`)
 }
 
-function readGltfJson(buf) {
-  const jsonLength = buf.readUInt32LE(12)
-  return JSON.parse(buf.subarray(20, 20 + jsonLength).toString('utf8'))
-}
-
-// Counts per node so a mesh reused by several nodes (e.g. four wheels) counts each time it is drawn
-function countTriangles(json) {
-  const meshTris = (json.meshes ?? []).map((mesh) =>
-    mesh.primitives.reduce((sum, prim) => {
-      const accessorIndex = prim.indices ?? prim.attributes.POSITION
-      return sum + Math.floor((json.accessors[accessorIndex]?.count ?? 0) / 3)
-    }, 0),
-  )
-  return (json.nodes ?? []).reduce((sum, node) => sum + (node.mesh === undefined ? 0 : meshTris[node.mesh]), 0)
+async function checkOrphans(dir, ext, ids, errors) {
+  if (!existsSync(dir)) return
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const isKnown = entry.isFile() && entry.name.endsWith(ext) && ids.has(path.basename(entry.name, ext))
+    if (!isKnown) errors.push(`${path.basename(dir)}/${entry.name}: not produced by the pipeline; add assets/ sources instead`)
+  }
 }
 
 async function main() {
-  const credits = JSON.parse(await readFile(CREDITS_FILE, 'utf8'))
-  const errors = []
+  const assets = await loadAssets()
+  const errors = [...assets.models, ...assets.environments].flatMap((a) => a.errors)
   const warnings = []
+  const lock = existsSync(LOCK_FILE) ? JSON.parse(await readFile(LOCK_FILE, 'utf8')) : { models: {}, environments: {} }
 
-  for (const file of await listGlbs(MODELS_DIR)) {
-    const rel = path.relative(MODELS_DIR, file).split(path.sep).join('/')
-    const credit = credits[rel]
-    if (!credit) {
-      errors.push(`${rel}: no entry in model-credits.json`)
-      continue
+  for (const model of assets.models) await checkModel(model, lock.models?.[model.manifest.id], errors, warnings)
+  for (const { manifest } of assets.environments) {
+    const entry = lock.environments?.[manifest.id]
+    const outPath = path.join(ENVS_OUT_DIR, `${manifest.id}.hdr`)
+    if (!entry || !existsSync(outPath) || sha256(await readFile(outPath)) !== entry.outputHash) {
+      errors.push(`${manifest.id}: environment output missing or stale, run pnpm models:build`)
     }
-
-    if (credit.license === 'UNVERIFIED') warnings.push(`${rel}: license not verified yet`)
-    else if (/NC|ND/.test(credit.license) || !ALLOWED_LICENSES.has(credit.license)) {
-      errors.push(`${rel}: license "${credit.license}" is not allowed for commercial use`)
-    }
-
-    const buf = await readFile(file)
-    const json = readGltfJson(buf)
-    const external = (json.images ?? []).filter((img) => img.uri && !img.uri.startsWith('data:'))
-    if (external.length) errors.push(`${rel}: references external textures (${external.map((i) => i.uri).join(', ')})`)
-
-    const bytes = (await stat(file)).size
-    const maxBytes = MAX_BYTES[credit.tier] ?? MAX_BYTES.hero
-    if (bytes > maxBytes) errors.push(`${rel}: ${Math.round(bytes / 1024)}KB exceeds ${credit.tier} budget of ${Math.round(maxBytes / 1024)}KB`)
-
-    const tris = countTriangles(json)
-    if (tris > MAX_TRIANGLES && !TRIANGLE_EXCEPTIONS[rel]) errors.push(`${rel}: ${tris} triangles exceeds ${MAX_TRIANGLES}`)
   }
+  await checkOrphans(MODELS_OUT_DIR, '.glb', new Set(assets.models.map((m) => m.manifest.id)), errors)
+  await checkOrphans(ENVS_OUT_DIR, '.hdr', new Set(assets.environments.map((e) => e.manifest.id)), errors)
 
-  const stale = Object.keys(credits).filter((rel) => !rel.startsWith('_'))
-  const present = new Set((await listGlbs(MODELS_DIR)).map((f) => path.relative(MODELS_DIR, f).split(path.sep).join('/')))
-  for (const rel of stale) if (!present.has(rel)) warnings.push(`${rel}: listed in credits but file not found`)
+  const registry = existsSync(REGISTRY_FILE) ? await readFile(REGISTRY_FILE, 'utf8') : ''
+  // Git on Windows may check text out with CRLF
+  if (registry.replaceAll(String.fromCharCode(13), '') !== renderRegistry(assets)) {
+    errors.push('apps/web/src/generated/model-registry.json is stale, run pnpm models:build')
+  }
 
   warnings.forEach((w) => console.warn(`warn   ${w}`))
   errors.forEach((e) => console.error(`error  ${e}`))
-  console.log(`${present.size} models checked, ${errors.length} errors, ${warnings.length} warnings`)
+  console.log(`${assets.models.length} models, ${assets.environments.length} environments, ${errors.length} errors, ${warnings.length} warnings`)
   if (errors.length) process.exitCode = 1
 }
 

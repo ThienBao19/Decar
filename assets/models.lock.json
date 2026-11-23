@@ -1,0 +1,107 @@
+{
+  "environments": {
+    "studio-small-09": {
+      "bytes": 1615248,
+      "outputHash": "e7cfda5f4e98e623db12b8bfd0184e048488e4855d9c83e2751fb44a32e80c45",
+      "sourceHash": "e7cfda5f4e98e623db12b8bfd0184e048488e4855d9c83e2751fb44a32e80c45"
+    }
+  },
+  "models": {
+    "bmw-m4-g82": {
+      "bytes": 1987108,
+      "configHash": "9858bed963e4e49b60a765145cf19a1c04556d79bc67e5cecabac77cb0d10c17",
+      "outputHash": "db90c492439b89ce6710d4f93729a8d22f004068ef4c220b2a760e633b3ea187",
+      "sourceHash": "913ac951ba2645777c91393b86aed2def2433a807e57e626b203908aa474b8fb",
+      "textures": 9,
+      "triangles": 206593
+    },
+    "ferrari-488": {
+      "bytes": 1249540,
+      "configHash": "2d87b4b4fcb617cb183bcf0b49780e584eeb3c9f71574bf93a4e15256f6730ae",
+      "outputHash": "c15cdee1dc2e19bb1a25240b09a9675853d7f25695259dbb045dc6893443e912",
+      "sourceHash": "cafe3f48da6797aa9bde75ca768bc5b57db366575fd233e90df186ae988a876e",
+      "textures": 0,
+      "triangles": 329119
+    },
+    "honda-civic": {
+      "bytes": 91876,
+      "configHash": "9858bed963e4e49b60a765145cf19a1c04556d79bc67e5cecabac77cb0d10c17",
+      "outputHash": "342a86e45b4cdb9220ea06b2b797b6beec9157bdd3d3660617794865c8bff260",
+      "sourceHash": "1d612b7efea9566f62878d08c1d9b12810bf2dd1089e1daf94bbad073c3b8ff6",
+      "textures": 1,
+      "triangles": 19720
+    },
+    "lamborghini-urus": {
+      "bytes": 78152,
+      "configHash": "9858bed963e4e49b60a765145cf19a1c04556d79bc67e5cecabac77cb0d10c17",
+      "outputHash": "7790962841bc8c22406d9e5be9a90cee8c32b572ded46e6e7e3bba37a423612f",
+      "sourceHash": "01e98ff38b9e133a908671d9b4934a174e3223e997986e411038ea533962017c",
+      "textures": 0,
+      "triangles": 14772
+    },
+    "mclaren-720s": {
+      "bytes": 24824,
+      "configHash": "9858bed963e4e49b60a765145cf19a1c04556d79bc67e5cecabac77cb0d10c17",
+      "outputHash": "e02485fd45c4b869e7f6fe275d41825b9ef960e536ba34ec16a01e5e8d2d82a0",
+      "sourceHash": "bbb1c718d2aaf5f4344e9fb2cd66d8332a998a515b09ddd4dfa14698d787124e",
+      "textures": 0,
+      "triangles": 3148
+    },
+    "mclaren-p1": {
+      "bytes": 873740,
+      "configHash": "9858bed963e4e49b60a765145cf19a1c04556d79bc67e5cecabac77cb0d10c17",
+      "outputHash": "4997f847792f340cfabf6af43a42234e67d4e07c77b143c6b08d99b4f6b76fdb",
+      "sourceHash": "6c681392e022376b110b48685cb8f026b0963623b695ecc1439d88ad74533745",
+      "textures": 0,
+      "triangles": 242728
+    },
+    "mercedes-amg-g63": {
+      "bytes": 26064,
+      "configHash": "9858bed963e4e49b60a765145cf19a1c04556d79bc67e5cecabac77cb0d10c17",
+      "outputHash": "0820d48cc3661473ff518f41253011804d74823b7406f635a31bf94c9a6de9d1",
+      "sourceHash": "1a9ce2bba813dca5005abab09715b01b8b5f4a9c48d7260463afdfeb876aa8b6",
+      "textures": 0,
+      "triangles": 3294
+    },
+    "porsche-911-992": {
+      "bytes": 332360,
+      "configHash": "9858bed963e4e49b60a765145cf19a1c04556d79bc67e5cecabac77cb0d10c17",
+      "outputHash": "39c24984f2ee2eeb78d8121846f67e750259447aecb263b196c30c4cca4b974e",
+      "sourceHash": "acc485239053d3ee7fa97cae8bb274709a5dc8d46fb560dd89396788054dd7a8",
+      "textures": 0,
+      "triangles": 107988
+    },
+    "porsche-911-gt3": {
+      "bytes": 83708,
+      "configHash": "9858bed963e4e49b60a765145cf19a1c04556d79bc67e5cecabac77cb0d10c17",
+      "outputHash": "495330fa5ec3cf1c325fdbd06504c255ffc00ca8c0ef4939eb861fb03340a1e5",
+      "sourceHash": "4c1a9954f331311ffa48604f1d235fa68ce0f3f7bda020b7cbf33ca1f2879802",
+      "textures": 0,
+      "triangles": 13524
+    },
+    "tesla-model-3": {
+      "bytes": 19260,
+      "configHash": "9858bed963e4e49b60a765145cf19a1c04556d79bc67e5cecabac77cb0d10c17",
+      "outputHash": "a0cf7a6a71979ae05c58ffed62249a83af76119ecce32c471e164a94b7360da0",
+      "sourceHash": "5aa96e3aa8ac8e2eb6304597d2bae8622cb8fec0d6c9f8c0cd0b702acc6bfb3a",
+      "textures": 0,
+      "triangles": 2854
+    },
+    "toyota-camry": {
+      "bytes": 24768,
+      "configHash": "9858bed963e4e49b60a765145cf19a1c04556d79bc67e5cecabac77cb0d10c17",
+      "outputHash": "809f9e99467d6bb12996ca3874594849740bb6924e1df90efdde06367024ad7b",
+      "sourceHash": "bf00f2f0386a25aa310abc0424d22586e46a59ee6c737e6b375c97c9f01bd462",
+      "textures": 0,
+      "triangles": 2954
+    },
+    "toyota-land-cruiser": {
+      "bytes": 173324,
+      "configHash": "9858bed963e4e49b60a765145cf19a1c04556d79bc67e5cecabac77cb0d10c17",
+      "outputHash": "5c047d47ef44b39102973746518db94fc7e20e7e05c74e237f048232415b5d50",
+      "sourceHash": "5d4b7cf00d2d9539d9a8f5260b24f314703206793e152e9e2d66faf2acb155ee",
+      "textures": 1,
+      "triangles": 31418
+    }
+  }
+}

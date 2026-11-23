@@ -1514,7 +1514,7 @@ print("[OK] Polish details complete: exhaust · plates · wipers · handles · c
 
 # ── EXPORT — mesh objects only; lights & camera stay in scene for rendering ──
 out = os.path.normpath(os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'apps', 'web', 'public', 'models', 'porsche911.glb'))
+    os.path.dirname(os.path.abspath(__file__)), '..', 'assets', 'models', 'porsche-911-992', 'source.glb'))
 _skip = {'Cyclorama', 'ChromeSphere_Ref'}
 bpy.ops.object.select_all(action='DESELECT')
 for _o in bpy.data.objects:
