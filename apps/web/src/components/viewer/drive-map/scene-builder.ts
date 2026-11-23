@@ -6,10 +6,11 @@ import { TireSparks } from '../tire-sparks'
 import { createGroundGrid } from './ground-grid'
 import type { VehicleCategory } from '@decar/shared'
 import { getModelPath } from '@/lib/vehicle-models'
+import { modelPath } from '@/lib/model-registry'
 import { loadBody } from '../bodies'
 const BG = 0x060b18
 const DRACO_CDN = 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/'
-const DEFAULT_MODEL = '/models/mclaren_p1.glb'
+const DEFAULT_MODEL = modelPath('mclaren-p1')
 const BUILDER_BODIES: readonly VehicleCategory[] = ['sedan', 'suv', 'sports', 'muscle', 'truck', 'electric']
 function isBuilderBody(bodyType?: string | null): bodyType is VehicleCategory {
   return BUILDER_BODIES.includes(bodyType as VehicleCategory)

@@ -1,0 +1,16 @@
+{
+  "id": "ferrari-488",
+  "title": "Ferrari 488",
+  "credit": {
+    "author": null,
+    "license": "UNVERIFIED",
+    "source": null
+  },
+  "match": [
+    "ferrari 488"
+  ],
+  "budgetException": {
+    "maxTriangles": 330000,
+    "reason": "Hundreds of tiny disconnected parts; simplification cannot reduce it further."
+  }
+}

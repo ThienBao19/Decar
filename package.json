@@ -10,7 +10,8 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "models:check": "node scripts/models/check.mjs",
-    "models:optimize": "node scripts/models/optimize.mjs",
+    "models:build": "node scripts/models/build.mjs",
+    "models:snapshot": "node scripts/models/snapshot.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
     "start": "node apps/api/dist/src/server.js"

@@ -1,0 +1,60 @@
+name: 3D models
+
+# Runs only when models, the pipeline or the studio viewer change
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'assets/**'
+      - 'scripts/models/**'
+      - 'apps/web/public/models/**'
+      - 'apps/web/public/environments/**'
+      - 'apps/web/src/generated/**'
+      - 'apps/web/src/components/viewer/StudioViewer.tsx'
+      - 'apps/web/src/components/viewer/studio/**'
+      - '.github/workflows/models.yml'
+
+concurrency:
+  group: models-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  snapshots:
+    name: Model check & studio snapshots
+    # Playwright 1.45 can't install browsers on ubuntu-latest (26.04)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm models:check
+
+      - run: pnpm --filter @decar/web exec playwright install --with-deps chromium
+
+      - name: Start web app
+        run: |
+          pnpm --filter @decar/web dev > web.log 2>&1 &
+          npx --yes wait-on@8.0.1 --timeout 180000 http://localhost:3000/studio/bmw-m4-g82
+        env:
+          NEXTAUTH_URL: http://localhost:3000
+          NEXTAUTH_SECRET: ci-snapshot-secret-32-chars-minimum
+
+      - run: pnpm models:snapshot
+        env:
+          SNAPSHOT_BASE_URL: http://localhost:3000
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: model-snapshots
+          path: |
+            artifacts/model-snapshots/
+            web.log

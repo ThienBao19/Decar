@@ -1,0 +1,280 @@
+{
+  "environments": {
+    "studio-small-09": {
+      "credit": {
+        "author": "Sergej Majboroda",
+        "license": "CC0-1.0",
+        "source": "https://polyhaven.com/a/studio_small_09"
+      },
+      "path": "/environments/studio-small-09.hdr",
+      "title": "Studio Small 09"
+    }
+  },
+  "generatedBy": "scripts/models/build.mjs — edit assets/*/ manifests, then run pnpm models:build",
+  "models": {
+    "bmw-m4-g82": {
+      "credit": {
+        "author": "SRT Performance (TheRealSRT)",
+        "license": "CC-BY-4.0",
+        "source": "https://sketchfab.com/3d-models/bmw-m4-competition-m-package-5c0a2dafb1ad408d9fc9eeef9aee531b"
+      },
+      "match": [
+        "bmw m4 competition",
+        "bmw m4"
+      ],
+      "path": "/models/bmw-m4-g82.glb",
+      "studio": {
+        "forward": "+z",
+        "lengthM": 4.79,
+        "lights": {
+          "head": [
+            "led11"
+          ],
+          "tail": [
+            "redlight"
+          ]
+        },
+        "materials": {
+          "black161": {
+            "roughness": 0.55
+          },
+          "body": {
+            "clearcoat": 1,
+            "clearcoatRoughness": 0.03,
+            "metalness": 0.1,
+            "roughness": 0.32
+          },
+          "caliper": {
+            "roughness": 0.4
+          },
+          "chrome": {
+            "color": "#d8d8d8",
+            "metalness": 1,
+            "roughness": 0.12
+          },
+          "dash": {
+            "roughness": 0.7
+          },
+          "headlight": {
+            "metalness": 0,
+            "opacity": 0.25,
+            "roughness": 0.02
+          },
+          "interior": {
+            "metalness": 0,
+            "roughness": 0.8
+          },
+          "livery": {
+            "clearcoat": 1,
+            "clearcoatRoughness": 0.03,
+            "metalness": 0.1,
+            "roughness": 0.32
+          },
+          "logo": {
+            "roughness": 0.25
+          },
+          "pillars": {
+            "clearcoat": 1,
+            "clearcoatRoughness": 0.05,
+            "roughness": 0.35
+          },
+          "rim": {
+            "metalness": 0.85,
+            "roughness": 0.28
+          },
+          "windows": {
+            "metalness": 0,
+            "opacity": 0.35,
+            "roughness": 0.02
+          },
+          "zx1": {
+            "clearcoat": 1,
+            "clearcoatRoughness": 0.03,
+            "metalness": 0.1,
+            "roughness": 0.32
+          }
+        },
+        "paint": {
+          "materials": [
+            "body",
+            "zx1"
+          ],
+          "presets": [
+            {
+              "hex": "#f1f1ef",
+              "name": "Alpine White"
+            },
+            {
+              "hex": "#0c0e13",
+              "name": "Black Sapphire"
+            },
+            {
+              "hex": "#8d9295",
+              "name": "Brooklyn Grey"
+            },
+            {
+              "hex": "#0f4a37",
+              "name": "Isle of Man Green"
+            },
+            {
+              "hex": "#8a0d17",
+              "name": "Toronto Red"
+            },
+            {
+              "hex": "#f0c000",
+              "name": "São Paulo Yellow"
+            },
+            {
+              "hex": "#1e4f9e",
+              "name": "Portimao Blue"
+            }
+          ]
+        }
+      },
+      "title": "BMW M4 Competition M Package (G82)"
+    },
+    "ferrari-488": {
+      "credit": {
+        "author": null,
+        "license": "UNVERIFIED",
+        "source": null
+      },
+      "match": [
+        "ferrari 488"
+      ],
+      "path": "/models/ferrari-488.glb",
+      "studio": null,
+      "title": "Ferrari 488"
+    },
+    "honda-civic": {
+      "credit": {
+        "author": null,
+        "license": "UNVERIFIED",
+        "source": null
+      },
+      "match": [
+        "honda civic"
+      ],
+      "path": "/models/honda-civic.glb",
+      "studio": null,
+      "title": "Honda Civic"
+    },
+    "lamborghini-urus": {
+      "credit": {
+        "author": null,
+        "license": "UNVERIFIED",
+        "source": null
+      },
+      "match": [
+        "lamborghini urus"
+      ],
+      "path": "/models/lamborghini-urus.glb",
+      "studio": null,
+      "title": "Lamborghini Urus"
+    },
+    "mclaren-720s": {
+      "credit": {
+        "author": null,
+        "license": "UNVERIFIED",
+        "source": null
+      },
+      "match": [
+        "mclaren 720s"
+      ],
+      "path": "/models/mclaren-720s.glb",
+      "studio": null,
+      "title": "McLaren 720S"
+    },
+    "mclaren-p1": {
+      "credit": {
+        "author": null,
+        "license": "UNVERIFIED",
+        "source": null
+      },
+      "match": [
+        "mclaren p1"
+      ],
+      "path": "/models/mclaren-p1.glb",
+      "studio": null,
+      "title": "McLaren (labelled P1; geometry looks like 650S GT3)"
+    },
+    "mercedes-amg-g63": {
+      "credit": {
+        "author": null,
+        "license": "UNVERIFIED",
+        "source": null
+      },
+      "match": [
+        "mercedes-amg g63",
+        "mercedes amg g63"
+      ],
+      "path": "/models/mercedes-amg-g63.glb",
+      "studio": null,
+      "title": "Mercedes-AMG G63"
+    },
+    "porsche-911-992": {
+      "credit": {
+        "author": "Decar",
+        "license": "Proprietary",
+        "source": "scripts/gen_porsche911.py"
+      },
+      "match": [],
+      "path": "/models/porsche-911-992.glb",
+      "studio": null,
+      "title": "Porsche 911 (992) — generated"
+    },
+    "porsche-911-gt3": {
+      "credit": {
+        "author": null,
+        "license": "UNVERIFIED",
+        "source": null
+      },
+      "match": [
+        "porsche 911 gt3",
+        "porsche 911"
+      ],
+      "path": "/models/porsche-911-gt3.glb",
+      "studio": null,
+      "title": "Porsche 911 GT3"
+    },
+    "tesla-model-3": {
+      "credit": {
+        "author": null,
+        "license": "UNVERIFIED",
+        "source": null
+      },
+      "match": [
+        "tesla model 3"
+      ],
+      "path": "/models/tesla-model-3.glb",
+      "studio": null,
+      "title": "Tesla Model 3"
+    },
+    "toyota-camry": {
+      "credit": {
+        "author": null,
+        "license": "UNVERIFIED",
+        "source": null
+      },
+      "match": [
+        "toyota camry"
+      ],
+      "path": "/models/toyota-camry.glb",
+      "studio": null,
+      "title": "Toyota Camry"
+    },
+    "toyota-land-cruiser": {
+      "credit": {
+        "author": null,
+        "license": "UNVERIFIED",
+        "source": null
+      },
+      "match": [
+        "toyota land cruiser"
+      ],
+      "path": "/models/toyota-land-cruiser.glb",
+      "studio": null,
+      "title": "Toyota Land Cruiser"
+    }
+  }
+}

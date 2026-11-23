@@ -1,0 +1,11 @@
+{
+  "id": "porsche-911-992",
+  "title": "Porsche 911 (992) — generated",
+  "credit": {
+    "author": "Decar",
+    "license": "Proprietary",
+    "source": "scripts/gen_porsche911.py"
+  },
+  "match": [],
+  "notes": "Source is exported by scripts/gen_porsche911.py."
+}

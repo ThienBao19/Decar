@@ -1,35 +1,21 @@
-/** Exact make+model -> GLB path */
-const EXACT: Record<string, string> = {
-  'mclaren p1':          '/models/mclaren_p1.glb',
-  'porsche 911 gt3':     '/models/porsche911gt3.glb',
-  'porsche 911':         '/models/porsche911gt3.glb',
-  'bmw m4 competition':  '/models/vehicles/bmw_m4_competition.glb',
-  'bmw m4':              '/models/vehicles/bmw_m4_competition.glb',
-  'mclaren 720s':        '/models/vehicles/mclaren_720s.glb',
-  'toyota camry':        '/models/vehicles/toyota_camry_2024.glb',
-  'tesla model 3':       '/models/vehicles/tesla_model3_2024.glb',
-  'honda civic':         '/models/vehicles/honda_civic_2024.glb',
-  'toyota land cruiser': '/models/vehicles/toyota_land_cruiser_2024.glb',
-  'mercedes-amg g63':    '/models/vehicles/mercedes_amg_g63.glb',
-  'mercedes amg g63':    '/models/vehicles/mercedes_amg_g63.glb',
-  'ferrari 488':         '/models/vehicles/ferrari_488.glb',
-  'lamborghini urus':    '/models/vehicles/lamborghini_urus.glb',
-}
+import { findModelForVehicle, modelPath } from './model-registry'
 
 // Drive-mode fallbacks per body category: the closest detailed model we have,
-// never a low-poly toy stand-in.
-const CATEGORY: Readonly<Record<string, string>> = {
-  sports:   '/models/vehicles/ferrari_488.glb',
-  suv:      '/models/vehicles/toyota_land_cruiser_2024.glb',
-  truck:    '/models/vehicles/toyota_land_cruiser_2024.glb',
-  van:      '/models/vehicles/toyota_land_cruiser_2024.glb',
-  electric: '/models/vehicles/tesla_model3_2024.glb',
-  coupe:    '/models/vehicles/bmw_m4_competition.glb',
-  hatch:    '/models/vehicles/honda_civic_2024.glb',
-  sedan:    '/models/vehicles/honda_civic_2024.glb',
-  race:     '/models/vehicles/ferrari_488.glb',
-  default:  '/models/mclaren_p1.glb',
+// never a low-poly toy stand-in. Ids refer to assets/models/<id>.
+const CATEGORY_MODEL_ID: Readonly<Record<string, string>> = {
+  sports:   'ferrari-488',
+  suv:      'toyota-land-cruiser',
+  truck:    'toyota-land-cruiser',
+  van:      'toyota-land-cruiser',
+  electric: 'tesla-model-3',
+  coupe:    'bmw-m4-g82',
+  hatch:    'honda-civic',
+  sedan:    'honda-civic',
+  race:     'ferrari-488',
+  default:  'mclaren-p1',
 }
+
+const categoryPath = (category: string) => modelPath(CATEGORY_MODEL_ID[category] ?? CATEGORY_MODEL_ID['default']!)
 
 const SUV_KW = ['suv','land cruiser','land rover','4runner','sequoia','tahoe','suburban','expedition','navigator','escalade','rav4','cr-v','pilot','passport','x5','x3','x1','q7','q5','q3','gla','gle','glb','glc','glk','gls','g-class','g63','g550','range rover','defender','discovery','cherokee','grand cherokee','wrangler','blazer','equinox','traverse','highlander','pathfinder','murano','rogue','armada','mdx','rdx','qx80','gx','lx','rx','nx','model x','model y','f-pace','e-pace','sport utility','xterra','terrain','acadia','atlas','tiguan','touareg','cayenne','macan','urus','edge','explorer','escape','bronco sport','seltos','sportage','sorento','telluride','palisade','santa fe','tucson','venue','kona','cx-5','cx-9','cx-50','cx-90','outlander','eclipse cross','asx','forester','outback','crosstrek','xv','hr-v','zr-v','be-1']
 const TRUCK_KW = ['pickup','f-150','f150','f-250','f250','silverado','ram 1500','ram 2500','tacoma','tundra','colorado','canyon','ridgeline','titan','frontier','ranger','maverick','santa cruz','gladiator','sierra','cybertruck']
@@ -52,23 +38,24 @@ function detectCategory(key: string): string {
 
 /**
  * Returns the best-match GLB path for a vehicle.
- * Priority: exact make+model > DB bodyType > keyword heuristic > default
+ * Priority: registry alias match > DB bodyType > keyword heuristic > default
  */
 export function getModelPath(make: string, model: string, bodyType?: string | null): string {
+  const exact = findModelForVehicle(make, model)
+  if (exact) return exact.path
   const key = (make + ' ' + model).toLowerCase().trim()
-  if (EXACT[key]) return EXACT[key]
 
   if (bodyType) {
     const bt = bodyType.toLowerCase()
-    if (bt.includes('sport utility') || bt.includes('suv') || bt.includes('crossover')) return CATEGORY['suv']!
-    if (bt.includes('truck') || bt.includes('pickup')) return CATEGORY['truck']!
-    if (bt.includes('van') || bt.includes('minivan') || bt.includes('mpv')) return CATEGORY['van']!
-    if (bt.includes('two seater') || bt.includes('sports car')) return CATEGORY['sports']!
-    if (bt.includes('electric')) return CATEGORY['electric']!
-    if (bt.includes('hatchback')) return CATEGORY['hatch']!
-    if (bt.includes('coupe')) return CATEGORY['coupe']!
-    if (bt.includes('sedan') || bt.includes('car')) return CATEGORY['sedan']!
+    if (bt.includes('sport utility') || bt.includes('suv') || bt.includes('crossover')) return categoryPath('suv')
+    if (bt.includes('truck') || bt.includes('pickup')) return categoryPath('truck')
+    if (bt.includes('van') || bt.includes('minivan') || bt.includes('mpv')) return categoryPath('van')
+    if (bt.includes('two seater') || bt.includes('sports car')) return categoryPath('sports')
+    if (bt.includes('electric')) return categoryPath('electric')
+    if (bt.includes('hatchback')) return categoryPath('hatch')
+    if (bt.includes('coupe')) return categoryPath('coupe')
+    if (bt.includes('sedan') || bt.includes('car')) return categoryPath('sedan')
   }
 
-  return CATEGORY[detectCategory(key)] ?? CATEGORY['default']!
+  return categoryPath(detectCategory(key))
 }

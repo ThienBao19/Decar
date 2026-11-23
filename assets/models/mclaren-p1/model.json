@@ -1,0 +1,13 @@
+{
+  "id": "mclaren-p1",
+  "title": "McLaren (labelled P1; geometry looks like 650S GT3)",
+  "credit": {
+    "author": null,
+    "license": "UNVERIFIED",
+    "source": null
+  },
+  "match": [
+    "mclaren p1"
+  ],
+  "notes": "Verify make/model; shape suggests 650S GT3, not P1."
+}
