@@ -7,12 +7,13 @@ function buildApp(tier: 'FREE' | 'PRO') {
   const app = Fastify({ logger: false })
 
   // Inject a pre-verified user without going through JWT — tests tier logic only
-  app.addHook('onRequest', async (req) => {
+  app.addHook('onRequest', (req, _reply, done) => {
     req['user'] = { userId: 'user_test', tier } as JwtPayload
+    done()
   })
 
-  app.get('/pro-only', { preHandler: [requireTier('PRO')] }, async () => ({ access: 'granted' }))
-  app.get('/free-ok', { preHandler: [requireTier('FREE')] }, async () => ({ access: 'granted' }))
+  app.get('/pro-only', { preHandler: [requireTier('PRO')] }, () => ({ access: 'granted' }))
+  app.get('/free-ok', { preHandler: [requireTier('FREE')] }, () => ({ access: 'granted' }))
 
   return app
 }

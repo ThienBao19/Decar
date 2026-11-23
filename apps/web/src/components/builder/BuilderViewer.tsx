@@ -102,7 +102,7 @@ export function BuilderViewer() {
     const scene = sceneRef.current
     if (!scene) return
 
-    loadBody(config.baseBodyCategory).then((mod) => {
+    void loadBody(config.baseBodyCategory).then((mod) => {
       // Remove old car
       if (carGroupRef.current) scene.remove(carGroupRef.current)
 

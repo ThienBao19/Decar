@@ -42,7 +42,7 @@ export function NavbarClient({ session }: Props) {
         {session.user.name?.split(' ')[0] ?? 'Account'}
       </Link>
       <button
-        onClick={() => signOut({ callbackUrl: '/' })}
+        onClick={() => void signOut({ callbackUrl: '/' })}
         className="text-[13px] text-[#4d4d4d] transition-colors hover:text-[#898989]"
       >
         Sign out

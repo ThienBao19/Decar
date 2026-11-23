@@ -104,7 +104,7 @@ export function PricingCard({
       <div className="mt-8">
         {ctaAction === 'checkout' ? (
           <button
-            onClick={handleCheckout}
+            onClick={() => void handleCheckout()}
             disabled={current || loading}
             className={`w-full rounded-[9999px] px-5 py-2.5 text-[14px] font-medium transition-opacity disabled:opacity-40 ${
               highlighted

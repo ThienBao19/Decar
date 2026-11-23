@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { requireAuth } from '../../middleware/requireAuth.js'
 
-export async function comparisonRoutes(app: FastifyInstance) {
+export function comparisonRoutes(app: FastifyInstance): Promise<void> {
   // GET /comparisons — list current user's saved comparisons
   app.get('/', {
     preHandler: [requireAuth],
@@ -69,4 +69,5 @@ export async function comparisonRoutes(app: FastifyInstance) {
       return reply.status(204).send()
     },
   })
+  return Promise.resolve()
 }

@@ -6,7 +6,7 @@ declare module 'fastify' {
     rawBody?: boolean
   }
 }
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 import { requireAuth } from '../../middleware/requireAuth.js'
 import {
   createCheckoutSession,
@@ -17,7 +17,7 @@ import {
 
 const WEB_URL = process.env.WEB_URL ?? 'http://localhost:3000'
 
-export async function subscriptionRoutes(app: FastifyInstance) {
+export function subscriptionRoutes(app: FastifyInstance): Promise<void> {
   // POST /subscriptions/checkout
   app.post('/checkout', {
     preHandler: [requireAuth],
@@ -88,4 +88,5 @@ export async function subscriptionRoutes(app: FastifyInstance) {
       return reply.status(200).send({ received: true })
     },
   })
+  return Promise.resolve()
 }

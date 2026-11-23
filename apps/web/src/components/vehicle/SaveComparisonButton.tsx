@@ -107,7 +107,7 @@ export function SaveComparisonButton({ vehicleId, vehicleName }: Props) {
 
   return (
     <div className="space-y-2">
-      <button onClick={handleCompare} disabled={status === 'saving'} className={BTN}>
+      <button onClick={() => void handleCompare()} disabled={status === 'saving'} className={BTN}>
         {status === 'saving' ? 'Saving...' : `Compare with ${tray.name}`}
       </button>
       {status === 'error' && <p className="text-[12px] text-[#f87171]">{errorMsg}</p>}

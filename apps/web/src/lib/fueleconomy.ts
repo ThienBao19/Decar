@@ -38,15 +38,6 @@ export interface FuelEconVehicle {
 
 // -- Fetch helpers --
 
-async function fetchXML(url: string): Promise<string> {
-  const res = await fetch(url, {
-    headers: { Accept: 'application/xml' },
-    next: { revalidate: 86400 },
-  })
-  if (!res.ok) throw new Error(`fueleconomy.gov ${res.status}`)
-  return res.text()
-}
-
 async function fetchJSON<T>(url: string): Promise<T> {
   const res = await fetch(url, {
     headers: { Accept: 'application/json' },

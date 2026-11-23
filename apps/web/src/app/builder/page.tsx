@@ -89,14 +89,14 @@ export default function BuilderPage() {
           {isDirty && !isSaving && <span className='text-[10px] text-[#555]'>unsaved</span>}
           {savedId && shareUrl && (
             <button
-              onClick={handleCopyLink}
+              onClick={() => void handleCopyLink()}
               className='rounded-md border border-[#2e2e2e] bg-[#111] px-3 py-1.5 text-[11px] text-[#888] transition hover:text-[#ccc]'
             >
               {copyDone ? 'Copied!' : 'Share Link'}
             </button>
           )}
           <button
-            onClick={handleSave}
+            onClick={() => void handleSave()}
             disabled={isSaving || !isDirty}
             className={[
               'rounded-md border px-4 py-1.5 text-[12px] transition',

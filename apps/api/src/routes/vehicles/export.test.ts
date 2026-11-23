@@ -61,13 +61,13 @@ function buildApp() {
   } as unknown as Redis
 
   const app = Fastify({ logger: false })
-  app.register(rateLimit, { max: 1000, timeWindow: '1 minute' })
-  app.register(jwt, { secret: 'test-secret-32-chars-minimum-ok!' })
+  void app.register(rateLimit, { max: 1000, timeWindow: '1 minute' })
+  void app.register(jwt, { secret: 'test-secret-32-chars-minimum-ok!' })
   app.decorate('prisma', mockPrisma)
   app.decorate('redis', mockRedis)
   // Register with /vehicles prefix — mirrors production where exportRoutes is
   // a sub-plugin of vehicleRoutes which is registered at prefix /vehicles
-  app.register(exportRoutes, { prefix: '/vehicles' })
+  void app.register(exportRoutes, { prefix: '/vehicles' })
   return { app }
 }
 
@@ -93,11 +93,11 @@ describe('GET /vehicles/:id/export/pdf', () => {
     } as unknown as Redis
 
     const app = Fastify({ logger: false })
-    app.register(rateLimit, { max: 1000, timeWindow: '1 minute' })
-    app.register(jwt, { secret: 'test-secret-32-chars-minimum-ok!' })
+    void app.register(rateLimit, { max: 1000, timeWindow: '1 minute' })
+    void app.register(jwt, { secret: 'test-secret-32-chars-minimum-ok!' })
     app.decorate('prisma', mockPrisma)
     app.decorate('redis', mockRedis)
-    app.register(exportRoutes, { prefix: '/vehicles' })
+    void app.register(exportRoutes, { prefix: '/vehicles' })
     await app.ready()
 
     const token = app.jwt.sign({ userId: 'user_1', tier: 'FREE' })

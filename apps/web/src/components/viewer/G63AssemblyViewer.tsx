@@ -101,7 +101,6 @@ const SEQUENCE: { name: string; t: number }[] = [
   { name: 'headlight_L',        t: 6.1 },
   { name: 'headlight_R',        t: 6.2 },
 ]
-const TOTAL_DURATION = 6.2 + 0.45  // last part lands ~6.65s
 
 // ─── 3-step toon gradient map ─────────────────────────────────────────────────
 function makeGradientMap(): THREE.DataTexture {
@@ -137,6 +136,7 @@ export function G63AssemblyViewer({ className }: Props) {
 
   useEffect(() => {
     const mount = mountRef.current
+    const parts = partsMap.current
     if (!mount) return
 
     // ── Renderer ─────────────────────────────────────────────────────────────
@@ -338,12 +338,13 @@ export function G63AssemblyViewer({ className }: Props) {
       tlRef.current?.kill()
       ro.disconnect()
       controls.dispose()
-      partsMap.current.forEach((group) => {
+      parts.forEach((group) => {
         group.traverse((obj) => {
           if (obj instanceof THREE.Mesh || obj instanceof THREE.LineSegments) {
-            obj.geometry.dispose()
-            if (Array.isArray(obj.material)) obj.material.forEach((m: THREE.Material) => m.dispose())
-            else (obj.material as THREE.Material).dispose()
+            (obj.geometry as THREE.BufferGeometry).dispose()
+            const material = obj.material as THREE.Material | THREE.Material[]
+            if (Array.isArray(material)) material.forEach((m) => m.dispose())
+            else material.dispose()
           }
         })
       })

@@ -1,9 +1,11 @@
 import type { FastifyInstance } from 'fastify'
+import type { VehicleDetailDTO } from '@decar/shared'
+
 import { requireAuth } from '../../middleware/requireAuth.js'
 import { requireTier } from '../../middleware/requireTier.js'
 import { getVehicle } from '../../services/vehicle.service.js'
 
-export async function exportRoutes(app: FastifyInstance) {
+export function exportRoutes(app: FastifyInstance): Promise<void> {
   // GET /vehicles/:id/export/pdf
   // Returns a print-optimised HTML page. In production the browser's
   // native Print → Save as PDF gives the best fidelity (no puppeteer dep).
@@ -25,10 +27,10 @@ export async function exportRoutes(app: FastifyInstance) {
         .send(html)
     },
   })
+  return Promise.resolve()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildPdfHtml(v: any): string {
+function buildPdfHtml(v: VehicleDetailDTO): string {
   const title = `${v.year} ${v.make} ${v.model}${v.trimLevel ? ` ${v.trimLevel}` : ''}`
   const generated = new Date().toLocaleDateString('en-US', {
     year: 'numeric', month: 'long', day: 'numeric',
@@ -95,10 +97,10 @@ ${v.exterior ? `
   <tr><td>Wheelbase</td><td>${v.exterior.wheelbaseMm} mm</td></tr>
 </table>` : ''}
 
-${v.exterior?.colors?.length ? `
+${v.exterior?.colors.length ? `
 <h2>Paint Colors</h2>
 <div class="colors">
-  ${v.exterior.colors.map((c: any) => `
+  ${v.exterior.colors.map((c) => `
     <div class="color-swatch">
       <span class="swatch" style="background:${escHtml(c.hexCode)}"></span>
       <span>${escHtml(c.name)}</span>
@@ -112,7 +114,7 @@ ${v.interior ? `
   <tr><td>Seat material</td><td>${escHtml(v.interior.seatMaterial)}</td></tr>
   <tr><td>Rows / seats</td><td>${v.interior.seatRows} rows / ${v.interior.seatCount} seats</td></tr>
   <tr><td>Dashboard</td><td>${escHtml(v.interior.dashboard)}</td></tr>
-  ${v.interior.techFeatures?.length ? `<tr><td>Tech features</td><td>${v.interior.techFeatures.map((f: string) => escHtml(f)).join(', ')}</td></tr>` : ''}
+  ${v.interior.techFeatures.length ? `<tr><td>Tech features</td><td>${v.interior.techFeatures.map((f) => escHtml(f)).join(', ')}</td></tr>` : ''}
 </table>` : ''}
 
 <div class="footer">Decar · decar.io · This spec sheet was generated for a Pro subscriber. Do not redistribute.</div>

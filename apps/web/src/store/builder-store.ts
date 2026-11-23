@@ -9,13 +9,13 @@ interface BuilderState {
   isDirty: boolean
   isSaving: boolean
   saveError: string | null
-  setBaseBody(category: VehicleCategory): void
-  setPart(category: PartCategory, partId: string | null): void
-  setPaint(paint: Partial<PaintConfig>): void
-  setName(name: string): void
-  resetDirty(): void
-  save(): Promise<string>
-  loadSaved(id: string): Promise<void>
+  setBaseBody: (category: VehicleCategory) => void
+  setPart: (category: PartCategory, partId: string | null) => void
+  setPaint: (paint: Partial<PaintConfig>) => void
+  setName: (name: string) => void
+  resetDirty: () => void
+  save: () => Promise<string>
+  loadSaved: (id: string) => Promise<void>
 }
 
 const DEFAULT_PAINT: PaintConfig = {

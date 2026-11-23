@@ -62,7 +62,7 @@ export function HeroScrub({
     if (reduced) return;
     let cancelled = false;
     let errored = 0;
-    const images: HTMLImageElement[] = new Array(frameCount);
+    const images: HTMLImageElement[] = new Array<HTMLImageElement>(frameCount);
     imagesRef.current = images;
 
     const onFirstReady = (img: HTMLImageElement) => {

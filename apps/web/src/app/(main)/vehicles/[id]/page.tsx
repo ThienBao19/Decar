@@ -16,20 +16,6 @@ const VehicleAssemblySection = dynamic(
 
 export const revalidate = 3600
 
-const G63AssemblyViewer = dynamic(
-  () => import('@/components/viewer/G63AssemblyViewer').then((m) => m.G63AssemblyViewer),
-  { ssr: false, loading: () => <ViewerSkeleton label="Loading 3D viewer..." /> },
-)
-
-function ViewerSkeleton({ label }: { label?: string }) {
-  return (
-    <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-xl border border-[#2e2e2e] bg-[#1c1c1c]">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3ecf8e]/40 border-t-[#3ecf8e]" />
-      {label && <span className="text-[11px] text-[#4d4d4d]">{label}</span>}
-    </div>
-  )
-}
-
 interface PageProps {
   params: { id: string }
 }

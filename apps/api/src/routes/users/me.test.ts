@@ -29,10 +29,10 @@ function buildApp(overrides: { userResult?: typeof BASE_USER | null } = {}) {
   }
 
   const app = Fastify({ logger: false })
-  app.register(jwt, { secret: 'test-secret-32-chars-minimum-ok' })
+  void app.register(jwt, { secret: 'test-secret-32-chars-minimum-ok' })
   app.decorate('prisma', mockPrisma as unknown as PrismaClient)
   app.decorate('redis', mockRedis as unknown as Redis)
-  app.register(userRoutes, { prefix: '/users' })
+  void app.register(userRoutes, { prefix: '/users' })
 
   return { app, mockPrisma }
 }
@@ -61,7 +61,7 @@ describe('GET /users/me', () => {
     })
 
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { data: typeof BASE_USER }
+    const body = res.json<{ data: typeof BASE_USER }>()
     expect(body.data.id).toBe('user_1')
     expect(body.data.email).toBe('test@example.com')
     expect(body.data.name).toBe('Test User')
@@ -102,7 +102,7 @@ describe('GET /users/me', () => {
     })
 
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { data: { subscription: { tier: string; currentPeriodEnd: string } } }
+    const body = res.json<{ data: { subscription: { tier: string; currentPeriodEnd: string } } }>()
     expect(body.data.subscription.tier).toBe('PRO')
     expect(body.data.subscription.currentPeriodEnd).toBe('2026-01-01T00:00:00.000Z')
   })
@@ -119,7 +119,7 @@ describe('GET /users/me', () => {
     })
 
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { data: { subscription: { currentPeriodEnd: null } } }
+    const body = res.json<{ data: { subscription: { currentPeriodEnd: null } } }>()
     expect(body.data.subscription.currentPeriodEnd).toBeNull()
   })
 })

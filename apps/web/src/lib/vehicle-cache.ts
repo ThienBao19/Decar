@@ -29,18 +29,6 @@ function slugify(make: string, model: string, year: number, trim?: string | null
     .replace(/^-|-$/g, '')
 }
 
-// -- Fuel type mapper --
-
-function mapFuelType(nhtsa: string | null): 'PETROL' | 'DIESEL' | 'ELECTRIC' | 'HYBRID' | 'HYDROGEN' {
-  if (!nhtsa) return 'PETROL'
-  const lower = nhtsa.toLowerCase()
-  if (lower.includes('diesel')) return 'DIESEL'
-  if (lower.includes('electric') && !lower.includes('hybrid')) return 'ELECTRIC'
-  if (lower.includes('hybrid') || lower.includes('plug-in')) return 'HYBRID'
-  if (lower.includes('hydrogen') || lower.includes('fuel cell')) return 'HYDROGEN'
-  return 'PETROL'
-}
-
 // -- Makes cache (in-memory, refreshed every 24h) --
 
 let cachedMakes: NHTSAMake[] = []

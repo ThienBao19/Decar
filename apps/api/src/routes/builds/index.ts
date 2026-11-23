@@ -28,7 +28,7 @@ function toBuildDTO(row: BuildRow, viewerId: string): VehicleBuildDTO {
   }
 }
 
-export async function buildRoutes(app: FastifyInstance) {
+export function buildRoutes(app: FastifyInstance): Promise<void> {
   app.get('/', { preHandler: [requireAuth], handler: async (req, reply) => {
     const builds = await app.prisma.vehicleBuild.findMany({
       where: { userId: req.user.userId },
@@ -92,4 +92,5 @@ export async function buildRoutes(app: FastifyInstance) {
     await app.prisma.vehicleBuild.delete({ where: { id } })
     return reply.status(204).send()
   }})
+  return Promise.resolve()
 }

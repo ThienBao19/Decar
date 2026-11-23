@@ -53,7 +53,7 @@ export function VehicleSearchForm({
       const params = new URLSearchParams({ make: makeName })
       if (yearVal) params.set('year', yearVal)
       const res = await fetch(`/api/vehicles/models?${params.toString()}`)
-      const json = await res.json()
+      const json = (await res.json()) as { data?: string[] }
       setModelSuggestions(json.data ?? [])
     } catch {
       setModelSuggestions([])
@@ -63,7 +63,7 @@ export function VehicleSearchForm({
   // Debounced model fetch
   useEffect(() => {
     if (make.length < 2) return
-    const timer = setTimeout(() => fetchModels(make, year), 300)
+    const timer = setTimeout(() => void fetchModels(make, year), 300)
     return () => clearTimeout(timer)
   }, [make, year, fetchModels])
 
@@ -87,7 +87,7 @@ export function VehicleSearchForm({
     setMake(m)
     setModel('')
     setShowMakeSuggestions(false)
-    fetchModels(m, year)
+    void fetchModels(m, year)
   }
 
   function selectModel(m: string) {

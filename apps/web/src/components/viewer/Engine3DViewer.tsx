@@ -5,6 +5,8 @@ import type { SignedMediaResponse } from '@decar/shared'
 
 // TypeScript declaration for the <model-viewer> web component (Google)
 declare global {
+  // Global JSX augmentation for a custom element can only be expressed as a namespace
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface IntrinsicElements {
       'model-viewer': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
