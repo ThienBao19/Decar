@@ -128,7 +128,6 @@ export class ExhaustEffect {
       mat.opacity = Math.max(0, 1 - progress * progress)
 
       // Grow + fade to smoke color
-      const newScale = (0.5 + progress * 2) * (p.mesh.scale.x / (0.5 + Math.random() * 0.01))
       p.mesh.scale.setScalar(Math.min(3, 0.5 + progress * 2))
 
       if (progress > 0.4) {

@@ -28,7 +28,7 @@ export function LoginForm() {
     <div className="space-y-3">
       {/* OAuth buttons */}
       <button
-        onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+        onClick={() => void signIn('google', { callbackUrl: '/dashboard' })}
         className="flex w-full items-center justify-center gap-3 rounded-lg border border-[#2e2e2e] bg-[#171717] px-4 py-2.5 text-[14px] font-medium text-[#b4b4b4] transition-colors hover:border-[#363636] hover:text-[#fafafa]"
       >
         <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
@@ -41,7 +41,7 @@ export function LoginForm() {
       </button>
 
       <button
-        onClick={() => signIn('github', { callbackUrl: '/dashboard' })}
+        onClick={() => void signIn('github', { callbackUrl: '/dashboard' })}
         className="flex w-full items-center justify-center gap-3 rounded-lg border border-[#2e2e2e] bg-[#171717] px-4 py-2.5 text-[14px] font-medium text-[#b4b4b4] transition-colors hover:border-[#363636] hover:text-[#fafafa]"
       >
         <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
@@ -57,7 +57,7 @@ export function LoginForm() {
       </div>
 
       {/* Magic link */}
-      <form onSubmit={handleEmailSubmit} className="space-y-3">
+      <form onSubmit={(e) => void handleEmailSubmit(e)} className="space-y-3">
         <input
           type="email"
           required

@@ -7,7 +7,7 @@ export class SkidMarks {
   private readonly _mesh: THREE.LineSegments
   private _head = 0
   constructor(parent: THREE.Object3D) {
-    this._buf = new Array(CAP).fill(null)
+    this._buf = new Array<Mark | null>(CAP).fill(null)
     this._geo = new THREE.BufferGeometry()
     const mat = new THREE.LineBasicMaterial({ color: 0x111111, transparent: true, opacity: 0.7 })
     this._mesh = new THREE.LineSegments(this._geo, mat)

@@ -26,7 +26,7 @@ export function PortalButton() {
 
   return (
     <button
-      onClick={handlePortal}
+      onClick={() => void handlePortal()}
       disabled={loading}
       className="rounded-[9999px] border border-[#2e2e2e] bg-[#1c1c1c] px-4 py-2 text-[13px] font-medium text-[#b4b4b4] transition-colors hover:border-[#363636] hover:text-[#fafafa] disabled:opacity-50"
     >
