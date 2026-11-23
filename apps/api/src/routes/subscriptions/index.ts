@@ -1,9 +1,8 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 
-// Extend FastifyContextConfig to allow rawBody flag for webhook route
 declare module 'fastify' {
-  interface FastifyContextConfig {
-    rawBody?: boolean
+  interface FastifyRequest {
+    rawBody?: Buffer
   }
 }
 import type Stripe from 'stripe'
@@ -18,6 +17,17 @@ import {
 const WEB_URL = process.env.WEB_URL ?? 'http://localhost:3000'
 
 export function subscriptionRoutes(app: FastifyInstance): Promise<void> {
+  // Scoped to this plugin: keep the exact request bytes, which Stripe signs
+  app.addContentTypeParser('application/json', { parseAs: 'buffer' }, (req, body: Buffer, done) => {
+    req.rawBody = body
+    if (body.length === 0) return done(null, undefined)
+    try {
+      done(null, JSON.parse(body.toString('utf8')))
+    } catch (err) {
+      done(Object.assign(err as Error, { statusCode: 400 }), undefined)
+    }
+  })
+
   // POST /subscriptions/checkout
   app.post('/checkout', {
     preHandler: [requireAuth],
@@ -56,11 +66,7 @@ export function subscriptionRoutes(app: FastifyInstance): Promise<void> {
   // POST /subscriptions/webhook
   // IMPORTANT: raw body must be preserved — Stripe signature verification requires the raw Buffer
   app.post('/webhook', {
-    config: {
-      // Disable the default JSON body parser for this route
-      rawBody: true,
-    },
-    handler: async (req: FastifyRequest & { rawBody?: Buffer }, reply: FastifyReply) => {
+    handler: async (req: FastifyRequest, reply: FastifyReply) => {
       const sig = req.headers['stripe-signature']
       if (!sig || typeof sig !== 'string') {
         return reply.status(400).send({ error: 'Missing stripe-signature header' })
@@ -69,7 +75,7 @@ export function subscriptionRoutes(app: FastifyInstance): Promise<void> {
       let event: Stripe.Event
       try {
         event = getStripe().webhooks.constructEvent(
-          req.rawBody ?? Buffer.from(JSON.stringify(req.body)),
+          req.rawBody ?? Buffer.alloc(0),
           sig,
           process.env.STRIPE_WEBHOOK_SECRET!,
         )
