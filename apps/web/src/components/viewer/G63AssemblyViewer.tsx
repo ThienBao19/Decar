@@ -136,6 +136,7 @@ export function G63AssemblyViewer({ className }: Props) {
 
   useEffect(() => {
     const mount = mountRef.current
+    const parts = partsMap.current
     if (!mount) return
 
     // ── Renderer ─────────────────────────────────────────────────────────────
@@ -337,7 +338,7 @@ export function G63AssemblyViewer({ className }: Props) {
       tlRef.current?.kill()
       ro.disconnect()
       controls.dispose()
-      partsMap.current.forEach((group) => {
+      parts.forEach((group) => {
         group.traverse((obj) => {
           if (obj instanceof THREE.Mesh || obj instanceof THREE.LineSegments) {
             (obj.geometry as THREE.BufferGeometry).dispose()
