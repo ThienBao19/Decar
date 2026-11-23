@@ -1,26 +1,25 @@
 import type { EngineDTO } from '@decar/shared'
 
+import { formatPower, formatTorque } from '@/lib/engine-format'
+
 interface Props {
   engine: EngineDTO
   isPro?: boolean
 }
 
 export function VehicleSpecs({ engine, isPro = false }: Props) {
-  const hp = isPro ? Math.round(engine.powerKw * 1.34102) : 0
-  const lbFt = isPro ? Math.round(engine.torqueNm * 0.737562) : 0
-
   const specs = [
     { label: 'Engine', value: `${engine.displacement}L ${engine.cylinders}-cyl`, gated: false },
     { label: 'Fuel', value: engine.fuelType, gated: false },
     { label: 'Drivetrain', value: engine.drivetrain, gated: false },
     {
       label: 'Power',
-      value: isPro ? `${engine.powerKw} kW (${hp} hp)` : '—',
+      value: isPro ? formatPower(engine.powerKw) : '—',
       gated: !isPro,
     },
     {
       label: 'Torque',
-      value: isPro ? `${engine.torqueNm} Nm (${lbFt} lb-ft)` : '—',
+      value: isPro ? formatTorque(engine.torqueNm) : '—',
       gated: !isPro,
     },
     {

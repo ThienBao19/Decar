@@ -9,6 +9,7 @@ import { getVehicleGalleryUrls } from '@/lib/vehicle-images'
 import { VehicleImageGallery } from '@/components/vehicle/VehicleImageGallery'
 import { VehicleDriveSection } from '@/components/viewer/VehicleDriveSection'
 import { SaveComparisonButton } from '@/components/vehicle/SaveComparisonButton'
+import { formatPower, formatTorque } from '@/lib/engine-format'
 const VehicleAssemblySection = dynamic(
   () => import('@/components/viewer/VehicleAssemblySection'),
   { ssr: false },
@@ -48,7 +49,6 @@ export default async function VehicleDetailPage({ params }: PageProps) {
   const isPro = session?.user?.tier === 'PRO'
 
   // Derive display values
-  const powerHp = v.engine ? Math.round(v.engine.powerKw * 1.341) : null
   const fuelLabel = v.engine?.fuelType ?? 'N/A'
   const galleryImages = getVehicleGalleryUrls(v.make, v.model, v.year)
   const vehicleTitle = `${v.year} ${v.make} ${v.model}`
@@ -118,8 +118,8 @@ export default async function VehicleDetailPage({ params }: PageProps) {
                 {[
                   { label: 'Displacement', value: `${v.engine.displacement}L` },
                   { label: 'Cylinders', value: String(v.engine.cylinders) },
-                  { label: 'Power', value: isPro ? `${v.engine.powerKw} kW (${powerHp} hp)` : 'Pro' },
-                  { label: 'Torque', value: isPro ? `${v.engine.torqueNm} Nm` : 'Pro' },
+                  { label: 'Power', value: isPro ? formatPower(v.engine.powerKw) : 'Pro' },
+                  { label: 'Torque', value: isPro ? formatTorque(v.engine.torqueNm) : 'Pro' },
                   { label: 'Fuel type', value: fuelLabel },
                   { label: 'Transmission', value: v.engine.transmission },
                   { label: 'Drivetrain', value: v.engine.drivetrain },
