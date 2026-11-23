@@ -32,7 +32,7 @@ A production-ready SaaS platform delivering detailed vehicle data, interactive 3
 decar/
 ├── apps/
 │   ├── web/          # Next.js 14 App Router  (Vercel)
-│   └── api/          # Fastify 4 REST API      (Vercel)
+│   └── api/          # Fastify 4 REST API      (Railway)
 ├── packages/
 │   └── shared/       # Shared TypeScript DTOs
 ├── scripts/          # DB seed, ES indexer, Blender exports
@@ -200,11 +200,11 @@ Coverage target: **80% overall** · 85% service layer · 90% security-critical p
 | App | Platform | Notes |
 |---|---|---|
 | `apps/web` | Vercel | Auto-deploys on push to `main` |
-| `apps/api` | Vercel | Separate Vercel project, Root Directory `apps/api` (Fastify preset) |
+| `apps/api` | Railway | `render.yaml` included for Render fallback |
 
 Set all environment variables in each platform's dashboard before the first deploy.
 
-**Stripe webhook** — register `https://<api-domain>/subscriptions/webhook` in the Stripe Dashboard. The `/subscriptions` routes keep the raw JSON bytes (`req.rawBody`) for signature verification.
+**Stripe webhook** — register `https://<api-domain>/api/subscriptions/webhook` in the Stripe Dashboard. Ensure the route receives the raw request body (Fastify content-type parser is bypassed for this route).
 
 ---
 

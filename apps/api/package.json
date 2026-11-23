@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "postinstall": "prisma generate",
     "start": "node dist/src/server.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
