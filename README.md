@@ -204,7 +204,7 @@ Coverage target: **80% overall** · 85% service layer · 90% security-critical p
 
 Set all environment variables in each platform's dashboard before the first deploy.
 
-**Stripe webhook** — register `https://<api-domain>/api/subscriptions/webhook` in the Stripe Dashboard. Ensure the route receives the raw request body (Fastify content-type parser is bypassed for this route).
+**Stripe webhook** — register `https://<api-domain>/subscriptions/webhook` in the Stripe Dashboard. The `/subscriptions` routes keep the raw JSON bytes (`req.rawBody`) for signature verification.
 
 ---
 
