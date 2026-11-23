@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { authOptions } from '@/lib/auth'
-import { LoginForm } from '@/components/auth/LoginForm'
+import { RegisterForm } from '@/components/auth/RegisterForm'
 
 export const metadata: Metadata = { title: 'Create Account' }
 
@@ -26,7 +26,7 @@ export default async function RegisterPage() {
       </div>
 
       <div className="rounded-xl border border-[#2e2e2e] bg-[#1c1c1c] p-8">
-        <LoginForm />
+        <RegisterForm />
       </div>
 
       <p className="mt-6 text-center text-[13px] text-[#4d4d4d]">

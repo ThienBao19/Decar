@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth'
 import { apiClient } from '@/lib/api-client'
 import type { UserDTO } from '@decar/shared'
 import { PortalButton } from '@/components/billing/PortalButton'
+import { ApplyPendingName } from '@/components/auth/ApplyPendingName'
 
 export const metadata: Metadata = { title: 'Dashboard' }
 
@@ -16,6 +17,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-12">
+      <ApplyPendingName hasName={Boolean(session.user.name)} />
       <h1 className="text-[28px] font-semibold tracking-tight text-[#fafafa]">Dashboard</h1>
       <p className="mt-1 text-[14px] text-[#898989]">Manage your account and subscription.</p>
 
