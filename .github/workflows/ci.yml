@@ -79,7 +79,8 @@ jobs:
 
   e2e:
     name: E2E Tests (Playwright)
-    runs-on: ubuntu-latest
+    # Playwright 1.45 can't install browsers on ubuntu-latest (26.04)
+    runs-on: ubuntu-24.04
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
@@ -112,7 +113,8 @@ jobs:
     name: Prisma Migrations (Supabase)
     runs-on: ubuntu-latest
     needs: [test]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Disabled until DB secrets and deploy tokens are configured
+    if: ${{ false }}
     steps:
       - uses: actions/checkout@v4
 
@@ -134,7 +136,8 @@ jobs:
     name: Deploy Web (Vercel)
     runs-on: ubuntu-latest
     needs: [migrate-db]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Disabled until DB secrets and deploy tokens are configured
+    if: ${{ false }}
     steps:
       - uses: actions/checkout@v4
 
@@ -154,7 +157,8 @@ jobs:
     name: Deploy API (Railway)
     runs-on: ubuntu-latest
     needs: [migrate-db]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Disabled until DB secrets and deploy tokens are configured
+    if: ${{ false }}
     steps:
       - uses: actions/checkout@v4
 
