@@ -5,7 +5,6 @@ const EXACT: Record<string, string> = {
   'porsche 911':         '/models/porsche911gt3.glb',
   'bmw m4 competition':  '/models/vehicles/bmw_m4_competition.glb',
   'bmw m4':              '/models/vehicles/bmw_m4_competition.glb',
-  'bmw m3':              '/models/vehicles/bmw_m3_2024.glb',
   'mclaren 720s':        '/models/vehicles/mclaren_720s.glb',
   'toyota camry':        '/models/vehicles/toyota_camry_2024.glb',
   'tesla model 3':       '/models/vehicles/tesla_model3_2024.glb',
@@ -17,21 +16,18 @@ const EXACT: Record<string, string> = {
   'lamborghini urus':    '/models/vehicles/lamborghini_urus.glb',
 }
 
-/**
- * Generic category fallback models.
- * High-fidelity exact matches use branded GLBs; category fallbacks use
- * Kenney.nl CC0 models (kenney_*) which are lightweight and license-free.
- */
+// Drive-mode fallbacks per body category: the closest detailed model we have,
+// never a low-poly toy stand-in.
 const CATEGORY: Readonly<Record<string, string>> = {
   sports:   '/models/vehicles/ferrari_488.glb',
-  suv:      '/models/vehicles/kenney_suv_luxury.glb',
-  truck:    '/models/vehicles/kenney_truck.glb',
-  van:      '/models/vehicles/kenney_van.glb',
+  suv:      '/models/vehicles/toyota_land_cruiser_2024.glb',
+  truck:    '/models/vehicles/toyota_land_cruiser_2024.glb',
+  van:      '/models/vehicles/toyota_land_cruiser_2024.glb',
   electric: '/models/vehicles/tesla_model3_2024.glb',
   coupe:    '/models/vehicles/bmw_m4_competition.glb',
-  hatch:    '/models/vehicles/kenney_hatchback.glb',
-  sedan:    '/models/vehicles/kenney_sedan.glb',
-  race:     '/models/vehicles/kenney_race.glb',
+  hatch:    '/models/vehicles/honda_civic_2024.glb',
+  sedan:    '/models/vehicles/honda_civic_2024.glb',
+  race:     '/models/vehicles/ferrari_488.glb',
   default:  '/models/mclaren_p1.glb',
 }
 

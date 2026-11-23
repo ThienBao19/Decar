@@ -10,6 +10,16 @@ import { VehicleImageGallery } from '@/components/vehicle/VehicleImageGallery'
 import { VehicleDriveSection } from '@/components/viewer/VehicleDriveSection'
 import { SaveComparisonButton } from '@/components/vehicle/SaveComparisonButton'
 import { formatPower, formatTorque } from '@/lib/engine-format'
+import { getStudioModel } from '@/lib/studio-models'
+const StudioViewer = dynamic(
+  () => import('@/components/viewer/StudioViewer').then((m) => m.StudioViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full items-center justify-center text-[12px] text-[#4d4d4d]">Loading studio…</div>
+    ),
+  },
+)
 const VehicleAssemblySection = dynamic(
   () => import('@/components/viewer/VehicleAssemblySection'),
   { ssr: false },
@@ -52,6 +62,7 @@ export default async function VehicleDetailPage({ params }: PageProps) {
   const fuelLabel = v.engine?.fuelType ?? 'N/A'
   const galleryImages = getVehicleGalleryUrls(v.make, v.model, v.year)
   const vehicleTitle = `${v.year} ${v.make} ${v.model}`
+  const studioModel = getStudioModel(v.make, v.model)
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">
@@ -88,6 +99,13 @@ export default async function VehicleDetailPage({ params }: PageProps) {
           )}
         </div>
       </div>
+
+      {/* Studio 3D view — only for vehicles with a realistic model */}
+      {studioModel && (
+        <div className="mb-8 overflow-hidden rounded-xl border border-[#2e2e2e]" style={{ height: 480 }}>
+          <StudioViewer model={studioModel} title={vehicleTitle} />
+        </div>
+      )}
 
       {/* Vehicle image gallery */}
       <div className="mb-8">
