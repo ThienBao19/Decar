@@ -2,6 +2,8 @@
 import dynamic from 'next/dynamic'
 import type { Metadata } from 'next'
 
+import { PRO_MONTHLY_PRICE_USD } from '@/lib/pricing'
+
 export const metadata: Metadata = {
   title: 'Vehicle Intelligence Platform',
 }
@@ -142,7 +144,7 @@ export default function HomePage() {
                 <p className="text-[14px] font-medium text-[#fafafa]">Pro</p>
                 <span className="rounded-[9999px] bg-[#3ecf8e] px-2.5 py-0.5 text-[11px] font-medium text-[#0f0f0f]">Popular</span>
               </div>
-              <p className="mt-2 text-[36px] font-normal text-[#fafafa]">$12</p>
+              <p className="mt-2 text-[36px] font-normal text-[#fafafa]">${PRO_MONTHLY_PRICE_USD}</p>
               <p className="mt-1 text-[14px] text-[#4d4d4d]">per month</p>
               <Link
                 href="/pricing"

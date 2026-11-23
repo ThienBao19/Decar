@@ -248,9 +248,9 @@ export default async function VehicleDetailPage({ params }: PageProps) {
           {session && (
             <div className="rounded-xl border border-[#2e2e2e] bg-[#171717] p-4">
               <h3 className="text-[13px] font-semibold text-[#fafafa]">Compare</h3>
-              <p className="mt-1 text-[12px] text-[#4d4d4d]">Save this vehicle to your comparison list.</p>
+              <p className="mt-1 text-[12px] text-[#4d4d4d]">Pick two vehicles to compare side by side.</p>
               <div className="mt-3">
-                <SaveComparisonButton vehicleAId={v.id} vehicleBId={v.id} label="Save to compare" />
+                <SaveComparisonButton vehicleId={v.id} vehicleName={vehicleTitle} />
               </div>
             </div>
           )}

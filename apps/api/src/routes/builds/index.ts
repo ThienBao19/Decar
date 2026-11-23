@@ -1,17 +1,40 @@
 import type { FastifyInstance } from 'fastify'
 import { requireAuth } from '../../middleware/requireAuth.js'
-import type { BuildConfig } from '@decar/shared'
+import type { BuildConfig, VehicleBuildDTO } from '@decar/shared'
 
 const MAX_FREE_BUILDS = 3
+
+interface BuildRow {
+  id: string
+  userId: string
+  name: string
+  configJson: unknown
+  thumbnail: string | null
+  isPublic: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+function toBuildDTO(row: BuildRow, viewerId: string): VehicleBuildDTO {
+  return {
+    id: row.id,
+    name: row.name,
+    config: row.configJson as BuildConfig,
+    thumbnail: row.thumbnail,
+    isPublic: row.isPublic,
+    isOwner: row.userId === viewerId,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  }
+}
 
 export async function buildRoutes(app: FastifyInstance) {
   app.get('/', { preHandler: [requireAuth], handler: async (req, reply) => {
     const builds = await app.prisma.vehicleBuild.findMany({
       where: { userId: req.user.userId },
       orderBy: { updatedAt: 'desc' },
-      select: { id: true, name: true, thumbnail: true, isPublic: true, createdAt: true, updatedAt: true, configJson: true },
     })
-    return reply.status(200).send({ data: builds })
+    return reply.status(200).send({ data: builds.map((b) => toBuildDTO(b, req.user.userId)) })
   }})
 
   app.get('/:id', { preHandler: [requireAuth], handler: async (req, reply) => {
@@ -21,7 +44,7 @@ export async function buildRoutes(app: FastifyInstance) {
     if (!build.isPublic && build.userId !== req.user.userId) {
       return reply.status(403).send({ error: 'Access denied', statusCode: 403 })
     }
-    return reply.status(200).send({ data: build })
+    return reply.status(200).send({ data: toBuildDTO(build, req.user.userId) })
   }})
 
   app.post('/', { preHandler: [requireAuth], handler: async (req, reply) => {
@@ -38,7 +61,7 @@ export async function buildRoutes(app: FastifyInstance) {
     const build = await app.prisma.vehicleBuild.create({
       data: { userId: req.user.userId, name: body.name.trim(), configJson: body.config as object, thumbnail: body.thumbnail ?? null },
     })
-    return reply.status(201).send({ data: build })
+    return reply.status(201).send({ data: toBuildDTO(build, req.user.userId) })
   }})
 
   app.patch('/:id', { preHandler: [requireAuth], handler: async (req, reply) => {
@@ -57,7 +80,7 @@ export async function buildRoutes(app: FastifyInstance) {
         ...(body.isPublic !== undefined && { isPublic: body.isPublic }),
       },
     })
-    return reply.status(200).send({ data: build })
+    return reply.status(200).send({ data: toBuildDTO(build, req.user.userId) })
   }})
 
   app.delete('/:id', { preHandler: [requireAuth], handler: async (req, reply) => {

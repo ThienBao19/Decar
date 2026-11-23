@@ -37,6 +37,17 @@ export function Footer() {
                 Pricing
               </Link>
             </div>
+            <div className="flex flex-col gap-3">
+              <p className="text-[12px] font-medium uppercase tracking-[1.2px] text-[#4d4d4d]">
+                Legal
+              </p>
+              <Link href="/terms" className="text-[13px] text-[#898989] hover:text-[#fafafa]">
+                Terms
+              </Link>
+              <Link href="/privacy" className="text-[13px] text-[#898989] hover:text-[#fafafa]">
+                Privacy
+              </Link>
+            </div>
           </nav>
         </div>
 

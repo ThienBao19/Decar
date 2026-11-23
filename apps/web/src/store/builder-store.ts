@@ -89,6 +89,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
   loadSaved: async (id) => {
     const dto = await builderApi.get(id)
-    set({ config: dto.config, savedId: dto.id, isDirty: false })
+    // Someone else's shared build: saving should create the viewer's own copy
+    set({ config: dto.config, savedId: dto.isOwner ? dto.id : null, isDirty: false })
   },
 }))

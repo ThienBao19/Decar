@@ -68,6 +68,7 @@ export interface VehicleBuildDTO {
   config: BuildConfig
   thumbnail?: string | null
   isPublic: boolean
+  isOwner?: boolean
   createdAt: string
   updatedAt: string
 }
