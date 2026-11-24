@@ -204,6 +204,8 @@ Coverage target: **80% overall** · 85% service layer · 90% security-critical p
 
 Set all environment variables in each platform's dashboard before the first deploy.
 
+**Schema changes** — Vercel deploys on push without waiting for CI, while migrations run in CI after the tests. Merge a backwards-compatible migration first, and the code that needs it once CI is green.
+
 **Stripe webhook** — register `https://<api-domain>/subscriptions/webhook` in the Stripe Dashboard. The `/subscriptions` routes keep the raw JSON bytes (`req.rawBody`) for signature verification.
 
 ---
