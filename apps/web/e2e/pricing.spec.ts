@@ -5,10 +5,10 @@ test.describe('Pricing page', () => {
     await page.goto('/pricing')
 
     await expect(page.getByRole('heading', { name: 'Simple, transparent pricing' })).toBeVisible()
-    await expect(page.getByText('FREE')).toBeVisible()
-    await expect(page.getByText('PRO')).toBeVisible()
-    await expect(page.getByText('$0')).toBeVisible()
-    await expect(page.getByText('$9')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'FREE', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'PRO', exact: true })).toBeVisible()
+    await expect(page.getByText('$0', { exact: true })).toBeVisible()
+    await expect(page.getByText('$9', { exact: true })).toBeVisible()
   })
 
   test('free tier upgrade CTA links to login for unauthenticated user', async ({ page }) => {

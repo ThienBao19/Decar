@@ -5,15 +5,15 @@ test.describe('Vehicle listing', () => {
     await page.goto('/vehicles')
 
     // Search bar present
-    await expect(page.getByPlaceholder('Make (e.g. Toyota)')).toBeVisible()
-    await expect(page.getByPlaceholder('Model (e.g. Camry)')).toBeVisible()
+    await expect(page.getByPlaceholder('Make (e.g. Toyota, BMW, Porsche)')).toBeVisible()
+    await expect(page.getByPlaceholder('Model (e.g. Camry, 911, Civic)')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Search' })).toBeVisible()
   })
 
   test('search form submits with make filter in URL', async ({ page }) => {
     await page.goto('/vehicles')
 
-    await page.getByPlaceholder('Make (e.g. Toyota)').fill('Toyota')
+    await page.getByPlaceholder('Make (e.g. Toyota, BMW, Porsche)').fill('Toyota')
     await page.getByRole('button', { name: 'Search' }).click()
 
     await expect(page).toHaveURL(/make=Toyota/)
