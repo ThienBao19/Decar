@@ -57,7 +57,7 @@ decar/
 | Layer | Technology |
 |---|---|
 | Framework | Fastify 4 |
-| ORM | Prisma 5 (PostgreSQL via Neon) |
+| ORM | Prisma 5 (PostgreSQL via Supabase) |
 | Cache | Redis (ioredis) — tier cache TTL 5 min |
 | Search | Elasticsearch 8 |
 | Payments | Stripe (checkout · portal · webhooks) |
@@ -94,7 +94,7 @@ Vehicle ──── Engine
 
 - Node.js 20+
 - pnpm 9+
-- PostgreSQL (or a Neon connection string)
+- PostgreSQL (or a Supabase connection string)
 - Redis
 - Elasticsearch 8 *(optional — falls back to DB search)*
 
