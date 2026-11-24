@@ -5,8 +5,8 @@ test.describe('Homepage', () => {
     await page.goto('/')
 
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Every detail about every vehicle')
-    await expect(page.getByRole('link', { name: 'Browse Vehicles' })).toBeVisible()
-    await expect(page.getByRole('link', { name: 'See Pricing' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Explore Vehicles' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'View Pricing' })).toBeVisible()
   })
 
   test('navigation links work', async ({ page }) => {

@@ -21,6 +21,6 @@ test.describe('Authentication', () => {
   test('unauthenticated user redirected from dashboard', async ({ page }) => {
     await page.goto('/dashboard')
 
-    await expect(page).toHaveURL('/login')
+    await expect(page).toHaveURL(/\/login(\?callbackUrl=%2Fdashboard)?$/)
   })
 })
