@@ -14,6 +14,15 @@ const FLOOR_RADIUS = 14
 
 // The composer draws into its own buffers, so the renderer's antialias flag has no effect
 const MSAA_SAMPLES = 4
+// AO is blurred anyway, so half resolution looks the same for far less GPU time
+const AO_SCALE = 0.5
+const AO_DENOISE_RADIUS_PX = 8
+
+class ScaledGTAOPass extends GTAOPass {
+  override setSize(width: number, height: number) {
+    super.setSize(Math.round(width * AO_SCALE), Math.round(height * AO_SCALE))
+  }
+}
 
 export interface StageQuality {
   isHigh: boolean
@@ -91,6 +100,11 @@ function buildFloor(scene: THREE.Scene, el: HTMLElement, quality: StageQuality) 
       color: new THREE.Color('#222222'),
     })
     mirror.rotation.x = -Math.PI / 2
+    // The AO pass redraws the scene for normals; don't render the reflection again for it
+    const renderReflection = mirror.onBeforeRender.bind(mirror)
+    mirror.onBeforeRender = (renderer, target, ...rest) => {
+      if (!target.overrideMaterial) renderReflection(renderer, target, ...rest)
+    }
     scene.add(mirror)
   }
   const overlay = new THREE.MeshBasicMaterial({
@@ -145,7 +159,8 @@ export function createComposer(
   composer.addPass(new RenderPass(scene, camera))
   let ao: GTAOPass | null = null
   if (quality.isHigh) {
-    ao = new GTAOPass(scene, camera, el.clientWidth, el.clientHeight)
+    ao = new ScaledGTAOPass(scene, camera, el.clientWidth, el.clientHeight)
+    ao.updatePdMaterial({ radius: AO_DENOISE_RADIUS_PX * AO_SCALE })
     ao.updateGtaoMaterial({ radius: 0.3, distanceExponent: 1.5, thickness: 1, scale: 1 })
     ao.blendIntensity = 0.85
     composer.addPass(ao)
