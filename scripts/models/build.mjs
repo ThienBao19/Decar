@@ -2,7 +2,7 @@
 // Rebuilds every model whose source or build config changed, always from the
 // original source, then rewrites the lock file and the generated registry.
 import { existsSync } from 'node:fs'
-import { copyFile, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { NodeIO } from '@gltf-transform/core'
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions'
@@ -12,9 +12,10 @@ import { MeshoptSimplifier } from 'meshoptimizer'
 import sharp from 'sharp'
 
 import {
-  ENVS_OUT_DIR, LOCK_FILE, MAX_TEXTURE_SIZE, MODELS_OUT_DIR, REGISTRY_FILE, countTrianglesFromJson, isLfsPointer,
+  ENVS_OUT_DIR, LOCK_FILE, MAX_TEXTURE_SIZE, MODELS_OUT_DIR, REGISTRY_FILE, countTrianglesFromJson, envConfigHash, isLfsPointer,
   loadAssets, maxTrianglesFor, modelConfigHash, prettyJson, readGlbJson, renderRegistry, sha256,
 } from './lib.mjs'
+import { decodeHdr, encodeHdr, softenHighlights } from './hdr.mjs'
 
 const SIMPLIFY_ERRORS = [0.002, 0.005, 0.01]
 
@@ -80,9 +81,10 @@ async function buildEnvironments(environments) {
   for (const { manifest, source } of environments) {
     const buf = await readFile(source)
     if (isLfsPointer(buf)) throw new Error(`${manifest.id}: source.hdr is an LFS pointer, run "git lfs pull" first`)
-    await copyFile(source, path.join(ENVS_OUT_DIR, `${manifest.id}.hdr`))
-    next[manifest.id] = { sourceHash: sha256(buf), outputHash: sha256(buf), bytes: buf.length }
-    console.log(`copied ${manifest.id}`)
+    const out = manifest.softenAbove ? encodeHdr(softenHighlights(decodeHdr(buf), manifest.softenAbove)) : buf
+    await writeFile(path.join(ENVS_OUT_DIR, `${manifest.id}.hdr`), out)
+    next[manifest.id] = { sourceHash: sha256(buf), configHash: envConfigHash(manifest), outputHash: sha256(out), bytes: out.length }
+    console.log(`built  ${manifest.id}`)
   }
   return next
 }
