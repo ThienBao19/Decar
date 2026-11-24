@@ -6,7 +6,7 @@ import { readFile, readdir } from 'node:fs/promises'
 import path from 'node:path'
 
 import {
-  ENVS_OUT_DIR, LOCK_FILE, MAX_BYTES, MODELS_OUT_DIR, REGISTRY_FILE, isLfsPointer, loadAssets, maxTrianglesFor,
+  ENVS_OUT_DIR, LOCK_FILE, MAX_BYTES, MODELS_OUT_DIR, REGISTRY_FILE, envConfigHash, isLfsPointer, loadAssets, maxTrianglesFor,
   modelConfigHash, readGlbJson, renderRegistry, sha256,
 } from './lib.mjs'
 
@@ -72,6 +72,8 @@ async function main() {
     const outPath = path.join(ENVS_OUT_DIR, `${manifest.id}.hdr`)
     if (!entry || !existsSync(outPath) || sha256(await readFile(outPath)) !== entry.outputHash) {
       errors.push(`${manifest.id}: environment output missing or stale, run pnpm models:build`)
+    } else if (entry.configHash !== envConfigHash(manifest)) {
+      errors.push(`${manifest.id}: environment config changed, run pnpm models:build`)
     }
   }
   await checkOrphans(MODELS_OUT_DIR, '.glb', new Set(assets.models.map((m) => m.manifest.id)), errors)

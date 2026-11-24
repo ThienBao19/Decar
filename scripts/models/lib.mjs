@@ -120,7 +120,8 @@ export function validateModel(m, folder) {
 export function validateEnvironment(e, folder) {
   const errors = []
   const where = `assets/environments/${folder}/env.json`
-  checkKeys(e, ['id', 'title', 'credit'], where, errors)
+  checkKeys(e, ['id', 'title', 'credit', 'softenAbove'], where, errors)
+  if (e.softenAbove !== undefined && !(e.softenAbove > 0)) errors.push(`${where}.softenAbove: must be a positive luminance`)
   if (e.id !== folder || !ID_PATTERN.test(e.id ?? '')) errors.push(`${where}.id: must equal the folder name`)
   if (typeof e.title !== 'string' || !e.title) errors.push(`${where}.title: required`)
   validateCredit(e.credit, where, errors)
@@ -150,6 +151,10 @@ export async function loadAssets() {
 export function modelConfigHash(manifest) {
   return sha256(stableJson({ pipeline: PIPELINE_VERSION, maxTriangles: maxTrianglesFor(manifest), maxTexture: MAX_TEXTURE_SIZE }))
 }
+
+// Bump when environment processing changes so every environment rebuilds
+const ENV_PIPELINE_VERSION = 1
+export const envConfigHash = (manifest) => sha256(stableJson({ pipeline: ENV_PIPELINE_VERSION, softenAbove: manifest.softenAbove ?? null }))
 
 export const maxTrianglesFor = (manifest) => manifest.budgetException?.maxTriangles ?? MAX_TRIANGLES
 export const modelPublicPath = (id) => `/models/${id}.glb`

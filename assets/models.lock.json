@@ -1,8 +1,9 @@
 {
   "environments": {
     "studio-small-09": {
-      "bytes": 1615248,
-      "outputHash": "e7cfda5f4e98e623db12b8bfd0184e048488e4855d9c83e2751fb44a32e80c45",
+      "bytes": 1612407,
+      "configHash": "6b6f49a536b94687cb167856091b255d2ec210faa10727b7f2fecd8d40a54553",
+      "outputHash": "d4a8dd30eb6ff203fca3f826ad897f1e714d461f0bc1f48bf93603d528232993",
       "sourceHash": "e7cfda5f4e98e623db12b8bfd0184e048488e4855d9c83e2751fb44a32e80c45"
     }
   },

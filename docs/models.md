@@ -66,6 +66,10 @@ screenshots as the `model-snapshots` artifact for review.
 5. Start the web app and run `pnpm models:snapshot`; open `artifacts/model-snapshots/index.html` and check all four views.
 6. Commit `assets/`, `apps/web/public/models/`, `apps/web/public/environments/` and `apps/web/src/generated/` together.
 
+## Studio environments
+
+`env.json` takes an optional `softenAbove` luminance. Light sources brighter than it are averaged over themselves during the build, so a softbox's honeycomb grid doesn't show up as stripes on glossy paint; dimmer areas are untouched. Pick a value above the brightest wall (about 1.7 in `studio-small-09`) and below the lamps. Changing the algorithm in `scripts/models/hdr.mjs` must bump `ENV_PIPELINE_VERSION` in `lib.mjs`.
+
 ## Changing the pipeline
 
 Changes to the optimization steps in `scripts/models/build.mjs` must bump

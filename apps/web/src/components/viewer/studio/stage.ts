@@ -7,6 +7,8 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js'
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 
+import { FLOOR_REFLECTION_SHADER } from './floor-reflection'
+
 export const BACKGROUND = '#0f1012'
 const FLOOR_CENTER = '#232428'
 const MIRROR_RADIUS = 5
@@ -97,7 +99,8 @@ function buildFloor(scene: THREE.Scene, el: HTMLElement, quality: StageQuality) 
     mirror = new Reflector(new THREE.CircleGeometry(MIRROR_RADIUS, 96), {
       textureWidth: Math.round(el.clientWidth / 2),
       textureHeight: Math.round(el.clientHeight / 2),
-      color: new THREE.Color('#222222'),
+      color: '#ffffff',
+      shader: FLOOR_REFLECTION_SHADER,
     })
     mirror.rotation.x = -Math.PI / 2
     // The AO pass redraws the scene for normals; don't render the reflection again for it
@@ -131,6 +134,8 @@ export function buildStage(scene: THREE.Scene, el: HTMLElement, quality: StageQu
   key.shadow.mapSize.set(2048, 2048)
   key.shadow.radius = 8
   key.shadow.bias = -0.0004
+  // Without it the car's curved panels shadow themselves in a fine grid
+  key.shadow.normalBias = 0.03
   Object.assign(key.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: 1, far: 25 })
   scene.add(key)
 
