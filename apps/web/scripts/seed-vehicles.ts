@@ -1,5 +1,5 @@
 ﻿/**
- * Seed script: fetch popular vehicles from NHTSA and cache to Neon DB.
+ * Seed script: fetch popular vehicles from NHTSA and cache to the database.
  * Run: npx tsx scripts/seed-vehicles.ts
  */
 

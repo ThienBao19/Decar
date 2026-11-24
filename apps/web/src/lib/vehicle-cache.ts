@@ -1,5 +1,5 @@
 ﻿/**
- * Vehicle caching layer: NHTSA API -> Prisma (Neon PostgreSQL)
+ * Vehicle caching layer: NHTSA API -> Prisma (Supabase PostgreSQL)
  *
  * Strategy: on-demand caching
  * 1. User searches for "Toyota Camry 2024"

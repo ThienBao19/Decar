@@ -1,6 +1,6 @@
 ﻿/**
  * Vehicle enrichment: auto-fetch specs from fueleconomy.gov
- * and save to Neon DB when a vehicle detail page is viewed.
+ * and save to the database when a vehicle detail page is viewed.
  */
 
 import { prisma } from './prisma'

@@ -8,7 +8,8 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel main: that could interrupt a migration running on production
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   typecheck-lint:
@@ -115,8 +116,7 @@ jobs:
     name: Prisma Migrations (Supabase)
     runs-on: ubuntu-latest
     needs: [test]
-    # Disabled until DB secrets and deploy tokens are configured
-    if: ${{ false }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
 
@@ -131,14 +131,15 @@ jobs:
 
       - run: pnpm --filter @decar/api exec prisma migrate deploy
         env:
-          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.SUPABASE_DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.DATABASEURL }}
+          # Must be the session pooler (port 5432): db.<ref>.supabase.co is IPv6-only and runners have no IPv6
+          DIRECT_URL: ${{ secrets.DIRECTURL }}
 
   deploy-web:
     name: Deploy Web (Vercel)
     runs-on: ubuntu-latest
     needs: [migrate-db]
-    # Disabled until DB secrets and deploy tokens are configured
+    # Disabled: Vercel deploys through its GitHub integration
     if: ${{ false }}
     steps:
       - uses: actions/checkout@v4
