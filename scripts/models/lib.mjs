@@ -90,10 +90,16 @@ function validateStudio(studio, where, errors) {
   }
 }
 
+function validateYears(years, where, errors) {
+  checkKeys(years, ['from', 'to'], where, errors)
+  if (!Number.isInteger(years.from)) errors.push(`${where}.from: first model year is required`)
+  if (years.to !== undefined && !(Number.isInteger(years.to) && years.to >= years.from)) errors.push(`${where}.to: must be a year >= from`)
+}
+
 export function validateModel(m, folder) {
   const errors = []
   const where = `assets/models/${folder}/model.json`
-  checkKeys(m, ['id', 'title', 'credit', 'match', 'studio', 'budgetException', 'notes'], where, errors)
+  checkKeys(m, ['id', 'title', 'credit', 'match', 'years', 'studio', 'budgetException', 'notes'], where, errors)
   if (m.id !== folder || !ID_PATTERN.test(m.id ?? '')) errors.push(`${where}.id: must equal the folder name and be kebab-case`)
   if (typeof m.title !== 'string' || !m.title) errors.push(`${where}.title: required`)
   validateCredit(m.credit, where, errors)
@@ -103,7 +109,11 @@ export function validateModel(m, folder) {
     checkKeys(m.budgetException, ['maxTriangles', 'reason'], `${where}.budgetException`, errors)
     if (!m.budgetException.reason) errors.push(`${where}.budgetException.reason: explain why the budget is exceeded`)
   }
-  if (m.studio) validateStudio(m.studio, `${where}.studio`, errors)
+  if (m.years) validateYears(m.years, `${where}.years`, errors)
+  if (m.studio) {
+    validateStudio(m.studio, `${where}.studio`, errors)
+    if (!m.years) errors.push(`${where}.years: required with studio, so the model is only shown for its own generation`)
+  }
   return errors
 }
 
@@ -151,7 +161,7 @@ export function renderRegistry({ models, environments }) {
     models: Object.fromEntries(
       models.map(({ manifest: m }) => [
         m.id,
-        { path: modelPublicPath(m.id), title: m.title, credit: m.credit, match: m.match ?? [], studio: m.studio ?? null },
+        { path: modelPublicPath(m.id), title: m.title, credit: m.credit, match: m.match ?? [], years: m.years ?? null, studio: m.studio ?? null },
       ]),
     ),
     environments: Object.fromEntries(

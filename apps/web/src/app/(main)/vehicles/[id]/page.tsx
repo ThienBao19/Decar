@@ -62,7 +62,7 @@ export default async function VehicleDetailPage({ params }: PageProps) {
   const fuelLabel = v.engine?.fuelType ?? 'N/A'
   const galleryImages = getVehicleGalleryUrls(v.make, v.model, v.year)
   const vehicleTitle = `${v.year} ${v.make} ${v.model}`
-  const studioModel = getStudioModel(v.make, v.model)
+  const studioModel = getStudioModel(v.make, v.model, v.year)
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">
