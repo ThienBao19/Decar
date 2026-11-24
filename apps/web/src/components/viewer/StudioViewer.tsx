@@ -25,9 +25,12 @@ const DRACO_CDN = 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/'
 const SNAPSHOT_SETTLE_FRAMES = 5
 // Frames averaged before deciding whether to lower quality
 const PERF_SAMPLE_FRAMES = 10
-// First frames pay for shader compilation and texture uploads
-const PERF_WARMUP_FRAMES = 5
-const TARGET_FRAME_SECONDS = 1 / 30
+// The first seconds pay for shader compilation and texture uploads, and stepping down is permanent
+const PERF_WARMUP_SECONDS = 2.5
+// Frames land on display refreshes, so 17-33 ms of work shows as 33 ms; only slower than that counts
+const MAX_FRAME_SECONDS = 1 / 24
+// One frame drawing while the next is queued keeps the GPU fed; more would pile up and freeze the page
+const MAX_FRAMES_IN_FLIGHT = 2
 
 interface Rig {
   camera: THREE.PerspectiveCamera
@@ -100,6 +103,12 @@ export function StudioViewer({ model, title, isSnapshot = false, initialView = '
       const size = fitCar(car, studio.lengthM)
       parts.contact.scale.set(size.x * 1.2, size.z * 1.2, 1)
       scene.add(car)
+      // The car and key light never move, so one shadow map serves every frame
+      renderer.shadowMap.autoUpdate = false
+      renderer.shadowMap.needsUpdate = true
+      // Compile off the render path so the car's first frames don't hitch
+      await renderer.compileAsync(scene, camera)
+      if (isDisposed) return
       const pose = poseFor(initialView, size, studio.forward)
       camera.position.copy(pose.position)
       controls.target.copy(pose.target)
@@ -110,18 +119,19 @@ export function StudioViewer({ model, title, isSnapshot = false, initialView = '
 
     const timer = new THREE.Timer()
     let settled = 0
-    let sampled = -PERF_WARMUP_FRAMES
+    let warmup = PERF_WARMUP_SECONDS
+    let sampled = 0
     let sampledTime = 0
     let skipped = 0
-    let fence: WebGLSync | null = null
+    let fences: WebGLSync[] = []
     const gl = renderer.getContext() as WebGL2RenderingContext
-    // True while the GPU is still drawing the last frame; queueing more would pile up and freeze the page
     const isGpuBusy = () => {
-      if (!fence) return false
-      if (gl.clientWaitSync(fence, 0, 0) === gl.TIMEOUT_EXPIRED) return true
-      gl.deleteSync(fence)
-      fence = null
-      return false
+      fences = fences.filter((fence) => {
+        const isPending = gl.clientWaitSync(fence, 0, 0) === gl.TIMEOUT_EXPIRED
+        if (!isPending) gl.deleteSync(fence)
+        return isPending
+      })
+      return fences.length >= MAX_FRAMES_IN_FLIGHT
     }
     // Snapshots keep fixed quality so review images are comparable across machines
     const adaptQuality = (dt: number) => {
@@ -129,10 +139,12 @@ export function StudioViewer({ model, title, isSnapshot = false, initialView = '
       const isThrottled = document.hidden || (dt > 0.2 && skipped === 0)
       skipped = 0
       if (isSnapshot || isThrottled) return
-      if (++sampled <= 0) return
+      warmup -= dt
+      if (warmup > 0) return
+      sampled++
       sampledTime += dt
       if (sampled < PERF_SAMPLE_FRAMES) return
-      const isSlow = sampledTime / sampled > TARGET_FRAME_SECONDS
+      const isSlow = sampledTime / sampled > MAX_FRAME_SECONDS
       sampled = 0
       sampledTime = 0
       if (isSlow) degradeQuality(parts, ao, renderer, composer)
@@ -150,7 +162,8 @@ export function StudioViewer({ model, title, isSnapshot = false, initialView = '
       if (rig?.goal && stepToward(camera, controls.target, rig.goal, dt)) rig.goal = null
       controls.update()
       composer.render()
-      fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0)
+      const fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0)
+      if (fence) fences = [...fences, fence]
       gl.flush()
       if (!rig) return
       adaptQuality(dt)
