@@ -12,6 +12,9 @@ const FLOOR_CENTER = '#232428'
 const MIRROR_RADIUS = 5
 const FLOOR_RADIUS = 14
 
+// The composer draws into its own buffers, so the renderer's antialias flag has no effect
+const MSAA_SAMPLES = 4
+
 export interface StageQuality {
   isHigh: boolean
 }
@@ -21,7 +24,7 @@ export const detectQuality = (): StageQuality => ({
 })
 
 export function createRenderer(el: HTMLElement, quality: StageQuality): THREE.WebGLRenderer {
-  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: true })
+  const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality.isHigh ? 1.5 : 1))
   renderer.setSize(el.clientWidth, el.clientHeight)
   renderer.outputColorSpace = THREE.SRGBColorSpace
@@ -134,7 +137,11 @@ export function buildStage(scene: THREE.Scene, el: HTMLElement, quality: StageQu
 export function createComposer(
   renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, el: HTMLElement, quality: StageQuality,
 ): { composer: EffectComposer; ao: GTAOPass | null } {
-  const composer = new EffectComposer(renderer)
+  const size = renderer.getDrawingBufferSize(new THREE.Vector2())
+  const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: MSAA_SAMPLES })
+  const composer = new EffectComposer(renderer, target)
+  // A custom target makes the composer assume device pixels; restore CSS pixels
+  composer.setSize(el.clientWidth, el.clientHeight)
   composer.addPass(new RenderPass(scene, camera))
   let ao: GTAOPass | null = null
   if (quality.isHigh) {

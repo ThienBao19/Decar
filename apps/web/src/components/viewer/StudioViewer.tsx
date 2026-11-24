@@ -24,7 +24,9 @@ declare global {
 const DRACO_CDN = 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/'
 const SNAPSHOT_SETTLE_FRAMES = 5
 // Frames averaged before deciding whether to lower quality
-const PERF_SAMPLE_FRAMES = 20
+const PERF_SAMPLE_FRAMES = 10
+// First frames pay for shader compilation and texture uploads
+const PERF_WARMUP_FRAMES = 5
 const TARGET_FRAME_SECONDS = 1 / 30
 
 interface Rig {
@@ -108,13 +110,26 @@ export function StudioViewer({ model, title, isSnapshot = false, initialView = '
 
     const timer = new THREE.Timer()
     let settled = 0
-    let sampled = 0
+    let sampled = -PERF_WARMUP_FRAMES
     let sampledTime = 0
+    let skipped = 0
+    let fence: WebGLSync | null = null
+    const gl = renderer.getContext() as WebGL2RenderingContext
+    // True while the GPU is still drawing the last frame; queueing more would pile up and freeze the page
+    const isGpuBusy = () => {
+      if (!fence) return false
+      if (gl.clientWaitSync(fence, 0, 0) === gl.TIMEOUT_EXPIRED) return true
+      gl.deleteSync(fence)
+      fence = null
+      return false
+    }
     // Snapshots keep fixed quality so review images are comparable across machines
     const adaptQuality = (dt: number) => {
-      // Throttled or hidden tabs report long frames that say nothing about GPU cost
-      if (isSnapshot || document.hidden || dt > 0.2) return
-      sampled++
+      // A long frame without GPU waits is a throttled tab or a main-thread stall, not a slow GPU
+      const isThrottled = document.hidden || (dt > 0.2 && skipped === 0)
+      skipped = 0
+      if (isSnapshot || isThrottled) return
+      if (++sampled <= 0) return
       sampledTime += dt
       if (sampled < PERF_SAMPLE_FRAMES) return
       const isSlow = sampledTime / sampled > TARGET_FRAME_SECONDS
@@ -124,13 +139,19 @@ export function StudioViewer({ model, title, isSnapshot = false, initialView = '
     }
     const tick = (time?: number) => {
       frame = requestAnimationFrame(tick)
+      if (!isVisible) return
+      if (isGpuBusy()) {
+        skipped++
+        return
+      }
       timer.update(time)
       const dt = timer.getDelta()
-      if (!isVisible) return
       const rig = rigRef.current
       if (rig?.goal && stepToward(camera, controls.target, rig.goal, dt)) rig.goal = null
       controls.update()
       composer.render()
+      fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0)
+      gl.flush()
       if (!rig) return
       adaptQuality(dt)
       if (isSnapshot && ++settled === SNAPSHOT_SETTLE_FRAMES) {
