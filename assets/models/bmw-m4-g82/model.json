@@ -10,6 +10,9 @@
     "bmw m4 competition",
     "bmw m4"
   ],
+  "years": {
+    "from": 2021
+  },
   "studio": {
     "lengthM": 4.79,
     "forward": "+z",

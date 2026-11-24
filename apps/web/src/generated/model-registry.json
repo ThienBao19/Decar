@@ -131,7 +131,10 @@
           ]
         }
       },
-      "title": "BMW M4 Competition M Package (G82)"
+      "title": "BMW M4 Competition M Package (G82)",
+      "years": {
+        "from": 2021
+      }
     },
     "ferrari-488": {
       "credit": {
@@ -144,7 +147,8 @@
       ],
       "path": "/models/ferrari-488.glb",
       "studio": null,
-      "title": "Ferrari 488"
+      "title": "Ferrari 488",
+      "years": null
     },
     "honda-civic": {
       "credit": {
@@ -157,7 +161,8 @@
       ],
       "path": "/models/honda-civic.glb",
       "studio": null,
-      "title": "Honda Civic"
+      "title": "Honda Civic",
+      "years": null
     },
     "lamborghini-urus": {
       "credit": {
@@ -170,7 +175,8 @@
       ],
       "path": "/models/lamborghini-urus.glb",
       "studio": null,
-      "title": "Lamborghini Urus"
+      "title": "Lamborghini Urus",
+      "years": null
     },
     "mclaren-720s": {
       "credit": {
@@ -183,7 +189,8 @@
       ],
       "path": "/models/mclaren-720s.glb",
       "studio": null,
-      "title": "McLaren 720S"
+      "title": "McLaren 720S",
+      "years": null
     },
     "mclaren-p1": {
       "credit": {
@@ -196,7 +203,8 @@
       ],
       "path": "/models/mclaren-p1.glb",
       "studio": null,
-      "title": "McLaren (labelled P1; geometry looks like 650S GT3)"
+      "title": "McLaren (labelled P1; geometry looks like 650S GT3)",
+      "years": null
     },
     "mercedes-amg-g63": {
       "credit": {
@@ -210,7 +218,8 @@
       ],
       "path": "/models/mercedes-amg-g63.glb",
       "studio": null,
-      "title": "Mercedes-AMG G63"
+      "title": "Mercedes-AMG G63",
+      "years": null
     },
     "porsche-911-992": {
       "credit": {
@@ -221,7 +230,8 @@
       "match": [],
       "path": "/models/porsche-911-992.glb",
       "studio": null,
-      "title": "Porsche 911 (992) — generated"
+      "title": "Porsche 911 (992) — generated",
+      "years": null
     },
     "porsche-911-gt3": {
       "credit": {
@@ -235,7 +245,8 @@
       ],
       "path": "/models/porsche-911-gt3.glb",
       "studio": null,
-      "title": "Porsche 911 GT3"
+      "title": "Porsche 911 GT3",
+      "years": null
     },
     "tesla-model-3": {
       "credit": {
@@ -248,7 +259,8 @@
       ],
       "path": "/models/tesla-model-3.glb",
       "studio": null,
-      "title": "Tesla Model 3"
+      "title": "Tesla Model 3",
+      "years": null
     },
     "toyota-camry": {
       "credit": {
@@ -261,7 +273,8 @@
       ],
       "path": "/models/toyota-camry.glb",
       "studio": null,
-      "title": "Toyota Camry"
+      "title": "Toyota Camry",
+      "years": null
     },
     "toyota-land-cruiser": {
       "credit": {
@@ -274,7 +287,8 @@
       ],
       "path": "/models/toyota-land-cruiser.glb",
       "studio": null,
-      "title": "Toyota Land Cruiser"
+      "title": "Toyota Land Cruiser",
+      "years": null
     }
   }
 }

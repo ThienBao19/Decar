@@ -37,6 +37,8 @@ export interface ModelEntry {
   title: string
   credit: Credit
   match: string[]
+  // Model years this generation covers; no `to` means still in production
+  years: { from: number; to?: number } | null
   studio: StudioConfig | null
 }
 
@@ -66,22 +68,27 @@ export function modelPath(id: string): string {
   return model.path
 }
 
+// Padded with spaces so a substring test only matches whole words: "bmw m4" is not in "bmw m440i"
+const toWords = (text: string) => ` ${text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).join(' ')} `
+
 // Longest alias wins, so "bmw m4 competition" beats "bmw m4"
 export function findModelForVehicle(make: string, model: string): ModelEntry | null {
-  const key = `${make} ${model}`.toLowerCase().trim()
+  const key = toWords(`${make} ${model}`)
   let best: { entry: ModelEntry; length: number } | null = null
   for (const entry of MODELS) {
-    for (const alias of entry.match) {
+    for (const alias of entry.match.map(toWords)) {
       if (key.includes(alias) && alias.length > (best?.length ?? 0)) best = { entry, length: alias.length }
     }
   }
   return best?.entry ?? null
 }
 
-// Only models that meet the realism bar have a studio config
-export function getStudioModel(make: string, model: string): ModelEntry | null {
+// Only models that meet the realism bar have a studio config, and only for the generation they depict
+export function getStudioModel(make: string, model: string, year: number): ModelEntry | null {
   const entry = findModelForVehicle(make, model)
-  return entry?.studio ? entry : null
+  if (!entry?.studio || !entry.years) return null
+  const { from, to = Infinity } = entry.years
+  return year >= from && year <= to ? entry : null
 }
 
 export function listCredits(): { title: string; credit: Credit }[] {

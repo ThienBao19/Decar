@@ -44,6 +44,7 @@ screenshots as the `model-snapshots` artifact for review.
   "title": "BMW M4 Competition (G82)",
   "credit": { "author": "…", "license": "CC-BY-4.0", "source": "https://…" },
   "match": ["bmw m4 competition", "bmw m4"],
+  "years": { "from": 2021 },
   "studio": {
     "lengthM": 4.79,
     "forward": "+z",
@@ -54,7 +55,8 @@ screenshots as the `model-snapshots` artifact for review.
 }
 ```
 
-   - `match`: lowercase "make model" aliases; the longest alias that appears in a vehicle's make + model wins.
+   - `match`: lowercase "make model" aliases; matched as whole words (`bmw m4` does not match `BMW M440i`); the longest alias wins.
+   - `years`: model years of this generation (`from`, optional `to`). Required with `studio`; other years show photos.
    - `studio`: add it **only when the model meets the realism bar** (PBR materials, correct proportions, visible interior). Without it the vehicle shows photos, not a 3D stand-in.
    - `lengthM`: real body length in metres; the model is scaled to it.
    - `forward`: axis the nose points along in the file. Check it with the snapshot: the `front34` image must show the front.
