@@ -73,6 +73,11 @@ async function registerRoutes() {
   app.get('/health', () => ({ status: 'ok' }))
 }
 
+function failStartup(err: unknown): never {
+  console.error(`[server] startup failed during: ${stage}`, err)
+  process.exit(1)
+}
+
 async function start() {
   const timer = setTimeout(() => {
     console.error(`[server] startup timed out after ${STARTUP_TIMEOUT_MS / 1000}s during: ${stage}`)
@@ -81,16 +86,22 @@ async function start() {
   try {
     await registerPlugins()
     await registerRoutes()
-    stage = 'listen'
-    const port = Number(process.env.PORT ?? 3001)
-    await app.listen({ port, host: '0.0.0.0' })
-    app.log.info(`API listening on port ${port}`)
+    // Boot plugins now so listen() reaches the server in the same tick and the host captures it
+    stage = 'ready'
+    await app.ready()
   } catch (err) {
-    console.error(`[server] startup failed during: ${stage}`, err)
-    process.exit(1)
+    failStartup(err)
   } finally {
     clearTimeout(timer)
   }
+  stage = 'listen'
+  const port = Number(process.env.PORT ?? 3001)
+  // Not awaited: Vercel captures the server by replacing listen() without binding a port, so
+  // the promise never resolves there, and awaiting it would keep this module from finishing
+  app
+    .listen({ port, host: '0.0.0.0' })
+    .then(() => app.log.info(`API listening on port ${port}`))
+    .catch(failStartup)
 }
 
 await start()
