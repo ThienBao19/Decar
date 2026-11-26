@@ -32,7 +32,7 @@ A production-ready SaaS platform delivering detailed vehicle data, interactive 3
 decar/
 ├── apps/
 │   ├── web/          # Next.js 14 App Router  (Vercel)
-│   └── api/          # Fastify 4 REST API      (Railway)
+│   └── api/          # Fastify 4 REST API      (Vercel)
 ├── packages/
 │   └── shared/       # Shared TypeScript DTOs
 ├── scripts/          # DB seed, ES indexer, Blender exports
@@ -200,9 +200,31 @@ Coverage target: **80% overall** · 85% service layer · 90% security-critical p
 | App | Platform | Notes |
 |---|---|---|
 | `apps/web` | Vercel | Auto-deploys on push to `main` |
-| `apps/api` | Railway | `render.yaml` included for Render fallback |
+| `apps/api` | Vercel | Separate project, Root Directory `apps/api`; see below. `render.yaml` is an unused fallback. |
 
 Set all environment variables in each platform's dashboard before the first deploy.
+
+### API on Vercel
+
+1. Vercel → **Add New → Project** → this repo. **Root Directory** `apps/api`; framework **Fastify** (detected from `src/server.ts`); leave Build Command and Output Directory empty.
+2. Environment variables (Production and Preview):
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Supabase **transaction pooler**, port 6543, with `?pgbouncer=true&connection_limit=1` |
+| `DIRECT_URL` | Supabase **session pooler**, port 5432 (`db.<ref>.supabase.co` is IPv6-only) |
+| `JWT_SECRET` | random, 32+ characters |
+| `API_INTERNAL_SECRET` | random; **must equal** the web project's value |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRO_PRICE_ID` | from Stripe |
+| `WEB_URL`, `ALLOWED_ORIGIN` | the web app's production URL |
+| `AWS_*`, `S3_BUCKET`, `CLOUDFLARE_R2_ENDPOINT` | only if media storage is used |
+
+   Leave `ELASTICSEARCH_URL`, `REDIS_URL` and `PORT` unset; search falls back to Postgres and caching is skipped.
+3. Check `https://<api-domain>/health` returns `{"status":"ok"}`.
+4. In the **web** project set `API_URL=https://<api-domain>` and `API_INTERNAL_SECRET`, then redeploy it.
+5. Stripe Dashboard → Webhooks → `https://<api-domain>/subscriptions/webhook`, events `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`; put its signing secret in `STRIPE_WEBHOOK_SECRET`.
+
+Vercel Hobby is for non-commercial use; move to Pro before charging customers. The API's rate limit is in memory, so it counts per function instance.
 
 **Schema changes** — Vercel deploys on push without waiting for CI, while migrations run in CI after the tests. Merge a backwards-compatible migration first, and the code that needs it once CI is green.
 
