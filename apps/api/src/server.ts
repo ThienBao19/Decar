@@ -1,5 +1,6 @@
 import 'dotenv/config'
 
+// Runtime only: startup failures are handled in start() and exit the process
 process.on('unhandledRejection', (reason) => {
   console.error('[server] unhandledRejection:', reason)
 })
@@ -27,48 +28,69 @@ const app = Fastify({
       : { redact: ['req.headers.authorization'] },
 })
 
-// Security headers
-await app.register(helmet, {
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", 'data:', 'https:'],
+// If a step hangs without throwing (e.g. an unreachable database), fail with its name
+// instead of leaving the platform to time the request out
+const STARTUP_TIMEOUT_MS = 20_000
+let stage = 'starting'
+
+async function registerPlugins() {
+  stage = 'security plugins'
+  await app.register(helmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+      },
     },
-  },
-})
+  })
+  // CORS — only allow the web app origin
+  await app.register(cors, {
+    origin: process.env.ALLOWED_ORIGIN?.split(',') ?? ['http://localhost:3000'],
+    credentials: true,
+  })
+  await app.register(sensible)
+  // Global rate limit — overridden per-route where needed
+  await app.register(rateLimit, { max: 100, timeWindow: '1 minute' })
 
-// CORS — only allow the web app origin
-await app.register(cors, {
-  origin: process.env.ALLOWED_ORIGIN?.split(',') ?? ['http://localhost:3000'],
-  credentials: true,
-})
+  stage = 'database (prisma)'
+  await app.register(prismaPlugin)
+  stage = 'redis'
+  await app.register(redisPlugin)
+  stage = 'jwt'
+  await app.register(jwtPlugin)
+}
 
-await app.register(sensible)
+async function registerRoutes() {
+  stage = 'routes'
+  await app.register(vehicleRoutes, { prefix: '/vehicles' })
+  await app.register(authRoutes, { prefix: '/auth' })
+  await app.register(userRoutes, { prefix: '/users' })
+  await app.register(subscriptionRoutes, { prefix: '/subscriptions' })
+  await app.register(comparisonRoutes, { prefix: '/comparisons' })
+  await app.register(buildRoutes, { prefix: '/builds' })
+  app.get('/health', () => ({ status: 'ok' }))
+}
 
-// Global rate limit — overridden per-route where needed
-await app.register(rateLimit, {
-  max: 100,
-  timeWindow: '1 minute',
-  redis: undefined, // redisPlugin adds its own instance; use in-memory for global
-})
+async function start() {
+  const timer = setTimeout(() => {
+    console.error(`[server] startup timed out after ${STARTUP_TIMEOUT_MS / 1000}s during: ${stage}`)
+    process.exit(1)
+  }, STARTUP_TIMEOUT_MS)
+  try {
+    await registerPlugins()
+    await registerRoutes()
+    stage = 'listen'
+    const port = Number(process.env.PORT ?? 3001)
+    await app.listen({ port, host: '0.0.0.0' })
+    app.log.info(`API listening on port ${port}`)
+  } catch (err) {
+    console.error(`[server] startup failed during: ${stage}`, err)
+    process.exit(1)
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
-// Internal plugins
-await app.register(prismaPlugin)
-await app.register(redisPlugin)
-await app.register(jwtPlugin)
-
-// Routes
-await app.register(vehicleRoutes, { prefix: '/vehicles' })
-await app.register(authRoutes, { prefix: '/auth' })
-await app.register(userRoutes, { prefix: '/users' })
-await app.register(subscriptionRoutes, { prefix: '/subscriptions' })
-await app.register(comparisonRoutes, { prefix: '/comparisons' })
-await app.register(buildRoutes, { prefix: '/builds' })
-
-app.get('/health', () => ({ status: 'ok' }))
-
-const port = Number(process.env.PORT ?? 3001)
-await app.listen({ port, host: '0.0.0.0' })
-app.log.info(`API listening on port ${port}`)
+await start()
