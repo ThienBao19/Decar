@@ -18,7 +18,7 @@ export default function StudioPage({ params, searchParams }: Props) {
   const model = getModel(params.id)
   if (!model?.studio) notFound()
   return (
-    <main className="h-screen w-screen bg-[#0f1012]">
+    <main className="h-screen w-screen bg-[#1d1f23]">
       <StudioClient model={model} isSnapshot={searchParams.snapshot === '1'} view={searchParams.view} />
     </main>
   )

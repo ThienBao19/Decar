@@ -222,7 +222,7 @@ export function StudioViewer({ model, title, isSnapshot = false, initialView = '
   const hasLights = Boolean(studio?.lights?.head?.length || studio?.lights?.tail?.length)
 
   return (
-    <div className="relative h-full w-full bg-[#0f1012]">
+    <div className="relative h-full w-full bg-[#1d1f23]">
       <div ref={mountRef} className="h-full w-full" aria-label={`${title} 3D studio view`} />
       {status === 'loading' && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[12px] text-[#898989]">
