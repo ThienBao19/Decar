@@ -12,17 +12,18 @@ const FREE_FEATURES = [
   '1 saved comparison',
   'Low-resolution images',
   'Vehicle search',
+  'Photoreal 3D studio (selected models)',
 ]
 
 const PRO_FEATURES = [
-  'Full technical spec sheets',
+  'Power & torque figures',
+  'Interior details',
   'Unlimited comparisons',
-  'Interactive 3D engine viewer',
-  '360° exterior view',
-  'Year-by-year spec history',
-  'PDF export',
-  'Full API access',
+  'Printable spec sheet (save as PDF)',
 ]
+
+// Planned, not built yet: listed so nobody pays expecting them today
+const COMING_SOON = ['Year-by-year spec history', 'API access']
 
 const COMPARISON_ROWS: [string, string | boolean, string | boolean][] = [
   ['Vehicle search', true, true],
@@ -30,11 +31,12 @@ const COMPARISON_ROWS: [string, string | boolean, string | boolean][] = [
   ['Paint color swatches', true, true],
   ['Saved comparisons', '1', 'Unlimited'],
   ['Image quality', 'Low-res', 'Full-res'],
-  ['3D engine viewer', false, true],
-  ['360° exterior view', false, true],
-  ['Spec history', false, true],
-  ['PDF export', false, true],
-  ['API access', false, true],
+  ['Photoreal 3D studio (selected models)', true, true],
+  ['Power & torque', false, true],
+  ['Interior details', false, true],
+  ['Printable spec sheet', false, true],
+  ['Spec history', false, 'Coming soon'],
+  ['API access', false, 'Coming soon'],
 ]
 
 const FAQS = [
@@ -88,6 +90,9 @@ export default async function PricingPage() {
           highlighted
         />
       </div>
+      <p className="mt-6 text-center text-[13px] text-[#898989]">
+        Coming to Pro: {COMING_SOON.join(' · ')}
+      </p>
 
       {/* Feature comparison table */}
       <div className="mt-16 overflow-hidden rounded-xl border border-[#2e2e2e]">
@@ -114,7 +119,7 @@ export default async function PricingPage() {
                   {typeof pro === 'boolean' ? (
                     <CheckIcon active={pro} green={pro} />
                   ) : (
-                    <span className="text-[#3ecf8e]">{pro}</span>
+                    <span className={pro === 'Coming soon' ? 'text-[#898989]' : 'text-[#3ecf8e]'}>{pro}</span>
                   )}
                 </td>
               </tr>
