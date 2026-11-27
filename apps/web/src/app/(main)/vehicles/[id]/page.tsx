@@ -112,11 +112,13 @@ export default async function VehicleDetailPage({ params }: PageProps) {
         <VehicleImageGallery images={galleryImages} alt={vehicleTitle} />
       </div>
 
-      {/* Drive this vehicle */}
-      <div className="mb-8">
-        <h2 className="mb-3 text-[15px] font-semibold text-[#fafafa]">Drive It</h2>
-        <VehicleDriveSection make={v.make} model={v.model} bodyType={v.exterior?.bodyType ?? null} />
-      </div>
+      {/* Drive this vehicle — same rule as the studio: its own realistic model or nothing */}
+      {studioModel && (
+        <div className="mb-8">
+          <h2 className="mb-3 text-[15px] font-semibold text-[#fafafa]">Drive It</h2>
+          <VehicleDriveSection title={vehicleTitle} model={studioModel} />
+        </div>
+      )}
 
       {/* Assembly workshop */}
       <div className="mb-8">

@@ -1,13 +1,13 @@
 ﻿'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 
 import { useBuilderStore } from '@/store/builder-store'
 
 const DriveViewer = dynamic(
-  () => import('@/components/viewer/Porsche911DrivingViewer').then((m) => m.Porsche911DrivingViewer),
+  () => import('@/components/viewer/DriveViewer2').then((m) => m.DriveViewer2),
   { ssr: false, loading: () => <div className='flex h-full items-center justify-center text-[13px] text-[#333]'>Loading drive…</div> },
 )
 
@@ -22,13 +22,15 @@ export default function DrivePage() {
   const handleSpeed = useCallback((s: number) => setSpeed(s), [])
   const handleRev = useCallback((r: boolean) => setIsRevving(r), [])
   const handleDrift = useCallback((d: boolean) => setIsDrifting(d), [])
+  const category = config.baseBodyCategory
+  const color = config.paint.bodyColor
+  const source = useMemo(() => ({ kind: 'body' as const, category, color }), [category, color])
 
   return (
     <main className='relative h-screen w-screen overflow-hidden bg-[#080808]'>
       <DriveViewer
         className='h-full w-full'
-        bodyColor={config.paint.bodyColor}
-        bodyType={config.baseBodyCategory}
+        source={source}
         onSpeedChange={handleSpeed}
         onRevChange={handleRev}
         onDriftChange={handleDrift}
