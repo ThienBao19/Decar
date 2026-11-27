@@ -10,15 +10,15 @@ A production-ready SaaS platform delivering detailed vehicle data, interactive 3
 - Browse vehicle specs (body dimensions, transmission, drivetrain, fuel type)
 - Search vehicles powered by Elasticsearch (falls back to Prisma `ILIKE`)
 - 1 saved comparison
+- Photoreal 3D studio for models that meet the realism bar (`docs/models.md`)
+- Vehicle Builder + Drive Simulator
 
 **Pro tier**
-- Full engine specs (power kW / torque Nm)
+- Full engine specs (power kW / torque Nm) and interior details
 - Unlimited comparisons
-- 3D exterior & interior viewer (`<model-viewer>`)
-- 360° exterior media
-- PDF spec export
-- REST API access
-- Vehicle Builder + Drive Simulator
+- Printable spec sheet (`/api/vehicles/:id/spec-sheet`, print → Save as PDF)
+
+Planned, not built: year-by-year spec history and public API access. They are shown as "Coming soon" on the pricing page; don't advertise a feature as included until it ships.
 
 **Admin**
 - Credential-based admin dashboard (`/admin`)

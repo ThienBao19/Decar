@@ -36,6 +36,12 @@ class ApiClient {
     return json.data
   }
 
+  // For non-JSON responses; the caller checks res.ok
+  async getRaw(path: string, options?: { session?: Session | null }): Promise<Response> {
+    const headers = await getAuthHeaders(this.baseUrl, options?.session)
+    return fetch(`${this.baseUrl}${path}`, { headers, cache: 'no-store' })
+  }
+
   async post<T>(path: string, body: unknown, options?: { session?: Session | null }): Promise<T> {
     const headers = await getAuthHeaders(this.baseUrl, options?.session)
     const res = await fetch(`${this.baseUrl}${path}`, { method: 'POST', headers, body: JSON.stringify(body) })

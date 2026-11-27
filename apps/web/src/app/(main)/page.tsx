@@ -31,7 +31,7 @@ export default function HomePage() {
           <div className="mb-8 flex justify-center">
             <span className="inline-flex items-center gap-2 rounded-[9999px] border border-[#2e2e2e] bg-[#0f0f0f] px-4 py-1.5 text-[12px] text-[#898989]">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#3ecf8e] animate-glow-pulse" />
-              Engine specs, 3D viewers &amp; full paint history
+              Engine specs, paint colors &amp; photoreal 3D studio
             </span>
           </div>
 
@@ -202,10 +202,10 @@ const FEATURES = [
   { icon: '⚙️', title: 'Engine Specs', description: 'Displacement, cylinders, fuel type, power output in kW and hp, torque, and drivetrain.', pro: false },
   { icon: '🎨', title: 'Paint Colors', description: 'Every factory color option with exact hex codes, color names, and availability by year.', pro: false },
   { icon: '⚖️', title: 'Side-by-Side Comparison', description: 'Compare up to two vehicles on specs, dimensions, and features in a clean table.', pro: false },
-  { icon: '🔄', title: '3D Interactive Viewer', description: 'Rotate, zoom, and inspect the engine, exterior, and interior in full 3D.', pro: true },
-  { icon: '📅', title: 'Year-by-Year History', description: 'Track how specs changed across every model year — spot facelifts and power bumps.', pro: true },
-  { icon: '📄', title: 'PDF Export', description: 'Export a clean, shareable PDF spec sheet. Perfect for buyers and workshops.', pro: true },
+  { icon: '🔄', title: '3D Studio', description: 'Orbit a photoreal model under studio lighting and try factory paints. Selected models.', pro: false },
+  { icon: '🔧', title: 'Full Engine & Interior Specs', description: 'Power and torque figures plus seating, cargo, and interior details.', pro: true },
+  { icon: '📄', title: 'Printable Spec Sheet', description: 'A clean one-page spec sheet to print or save as PDF. Perfect for buyers and workshops.', pro: true },
 ]
 
 const FREE_FEATURES = ['Basic engine specs', 'Paint color swatches', '1 saved comparison', 'Low-res exterior images']
-const PRO_FEATURES = ['Everything in Free', 'Interactive 3D viewer', 'Full interior & engine specs', 'Year-by-year history', 'Unlimited comparisons', 'PDF spec sheet export', 'API access']
+const PRO_FEATURES = ['Everything in Free', 'Power & torque figures', 'Full interior specs', 'Unlimited comparisons', 'Printable spec sheet']

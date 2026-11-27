@@ -237,7 +237,7 @@ export default async function VehicleDetailPage({ params }: PageProps) {
             <div className="rounded-xl border border-[#3ecf8e]/20 bg-[#3ecf8e]/5 p-5">
               <p className="text-[14px] font-semibold text-[#fafafa]">Unlock full specs</p>
               <p className="mt-1 text-[13px] text-[#898989]">
-                Power, torque, 3D viewer, interior details, and PDF export.
+                Power, torque, interior details, and a printable spec sheet.
               </p>
               <a
                 href="/pricing"
@@ -246,6 +246,17 @@ export default async function VehicleDetailPage({ params }: PageProps) {
                 Upgrade to Pro
               </a>
             </div>
+          )}
+
+          {isPro && (
+            <a
+              href={`/api/vehicles/${v.id}/spec-sheet`}
+              target="_blank"
+              rel="noopener"
+              className="block rounded-[9999px] border border-[#3ecf8e]/40 py-2 text-center text-[13px] font-medium text-[#3ecf8e] transition-colors hover:bg-[#3ecf8e]/10"
+            >
+              Print spec sheet
+            </a>
           )}
 
           {/* Compare */}
