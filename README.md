@@ -214,6 +214,8 @@ Set all environment variables in each platform's dashboard before the first depl
 4. In the **web** project set `API_URL=https://<api-domain>` and `API_INTERNAL_SECRET`, then redeploy it.
 5. Stripe Dashboard → Webhooks → `https://<api-domain>/subscriptions/webhook`, events `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`; put its signing secret in `STRIPE_WEBHOOK_SECRET`.
 
+Both projects pin their functions to `sin1` (Singapore) in `vercel.json`, next to the Supabase database in `ap-southeast-1`. Vercel's default `iad1` puts every query across the Pacific (about 3 s per search instead of a few hundred ms); if the database moves, move the region with it.
+
 Vercel Hobby is for non-commercial use; move to Pro before charging customers. The API's rate limit is in memory, so it counts per function instance.
 
 **Schema changes** — Vercel deploys on push without waiting for CI, while migrations run in CI after the tests. Merge a backwards-compatible migration first, and the code that needs it once CI is green.
