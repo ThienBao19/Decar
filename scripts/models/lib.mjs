@@ -96,10 +96,26 @@ function validateYears(years, where, errors) {
   if (years.to !== undefined && !(Number.isInteger(years.to) && years.to >= years.from)) errors.push(`${where}.to: must be a year >= from`)
 }
 
+// Paints a rectangle of a material's base colour texture, for atlas regions the
+// source author left as a placeholder. rect is [left, top, right, bottom] in 0..1
+function validateTextureFixes(fixes, where, errors) {
+  if (!Array.isArray(fixes)) return errors.push(`${where}: must be an array`)
+  fixes.forEach((f, i) => {
+    const at = `${where}[${i}]`
+    checkKeys(f, ['material', 'rect', 'color', 'reason'], at, errors)
+    if (typeof f.material !== 'string' || !f.material) errors.push(`${at}.material: substring of the material name is required`)
+    const r = f.rect
+    const isRect = Array.isArray(r) && r.length === 4 && r.every((v) => typeof v === 'number' && v >= 0 && v <= 1)
+    if (!isRect || r[0] >= r[2] || r[1] >= r[3]) errors.push(`${at}.rect: [left, top, right, bottom] in 0..1 with left < right, top < bottom`)
+    if (!HEX_PATTERN.test(f.color ?? '')) errors.push(`${at}.color: must be #rrggbb`)
+    if (!f.reason) errors.push(`${at}.reason: explain what the region is and why it is replaced`)
+  })
+}
+
 export function validateModel(m, folder) {
   const errors = []
   const where = `assets/models/${folder}/model.json`
-  checkKeys(m, ['id', 'title', 'credit', 'match', 'years', 'studio', 'budgetException', 'notes'], where, errors)
+  checkKeys(m, ['id', 'title', 'credit', 'match', 'years', 'studio', 'budgetException', 'textureFixes', 'notes'], where, errors)
   if (m.id !== folder || !ID_PATTERN.test(m.id ?? '')) errors.push(`${where}.id: must equal the folder name and be kebab-case`)
   if (typeof m.title !== 'string' || !m.title) errors.push(`${where}.title: required`)
   validateCredit(m.credit, where, errors)
@@ -109,6 +125,7 @@ export function validateModel(m, folder) {
     checkKeys(m.budgetException, ['maxTriangles', 'reason'], `${where}.budgetException`, errors)
     if (!m.budgetException.reason) errors.push(`${where}.budgetException.reason: explain why the budget is exceeded`)
   }
+  if (m.textureFixes !== undefined) validateTextureFixes(m.textureFixes, `${where}.textureFixes`, errors)
   if (m.years) validateYears(m.years, `${where}.years`, errors)
   if (m.studio) {
     validateStudio(m.studio, `${where}.studio`, errors)
@@ -149,7 +166,10 @@ export async function loadAssets() {
 
 // Only fields that change the optimized GLB; studio tweaks don't force a rebuild
 export function modelConfigHash(manifest) {
-  return sha256(stableJson({ pipeline: PIPELINE_VERSION, maxTriangles: maxTrianglesFor(manifest), maxTexture: MAX_TEXTURE_SIZE }))
+  const config = { pipeline: PIPELINE_VERSION, maxTriangles: maxTrianglesFor(manifest), maxTexture: MAX_TEXTURE_SIZE }
+  // Only hashed when present, so adding the field left every other model's build untouched
+  const fixes = manifest.textureFixes?.map(({ material, rect, color }) => ({ material, rect, color }))
+  return sha256(stableJson(fixes?.length ? { ...config, textureFixes: fixes } : config))
 }
 
 // Bump when environment processing changes so every environment rebuilds

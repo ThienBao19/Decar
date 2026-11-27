@@ -61,6 +61,7 @@ screenshots as the `model-snapshots` artifact for review.
    - `lengthM`: real body length in metres; the model is scaled to it.
    - `forward`: axis the nose points along in the file. Check it with the snapshot: the `front34` image must show the front.
    - Keys under `materials`, `paint.materials` and `lights` are case-insensitive substrings of glTF material names; `models:check` rejects keys that match nothing.
+   - `textureFixes`: `[{ "material": "interior7", "rect": [0, 0, 1, 0.0625], "color": "#262628", "reason": "…" }]` paints a rectangle (`[left, top, right, bottom]`, 0..1) of a material's base colour texture before compression, for atlas regions the author left as a placeholder. Prefer fixing the source; use this when the source is a third-party download.
    - `budgetException`: `{ "maxTriangles": n, "reason": "…" }` when a model legitimately exceeds 250k triangles.
 4. Run `pnpm models:build`, then `pnpm models:check`.
 5. Start the web app and run `pnpm models:snapshot`; open `artifacts/model-snapshots/index.html` and check all four views.

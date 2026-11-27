@@ -27,8 +27,31 @@ async function createIO() {
   })
 }
 
-async function optimizeModel(io, sourcePath, outPath, maxTriangles) {
+async function fillRect(texture, [left, top, right, bottom], hex) {
+  const { data, info } = await sharp(Buffer.from(texture.getImage())).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  const rgb = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
+  const [x0, x1] = [Math.round(left * info.width), Math.round(right * info.width)]
+  const [y0, y1] = [Math.round(top * info.height), Math.round(bottom * info.height)]
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) rgb.forEach((v, c) => { data[(y * info.width + x) * 4 + c] = v })
+  }
+  const png = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer()
+  texture.setImage(new Uint8Array(png)).setMimeType('image/png')
+}
+
+async function applyTextureFixes(doc, manifest) {
+  for (const fix of manifest.textureFixes ?? []) {
+    const materials = doc.getRoot().listMaterials().filter((m) => m.getName().toLowerCase().includes(fix.material.toLowerCase()))
+    const textures = [...new Set(materials.map((m) => m.getBaseColorTexture()).filter(Boolean))]
+    if (!textures.length) throw new Error(`${manifest.id}: textureFixes material "${fix.material}" has no base colour texture`)
+    for (const texture of textures) await fillRect(texture, fix.rect, fix.color)
+  }
+}
+
+async function optimizeModel(io, sourcePath, outPath, manifest) {
+  const maxTriangles = maxTrianglesFor(manifest)
   const doc = await io.read(sourcePath)
+  await applyTextureFixes(doc, manifest)
   await doc.transform(dedup(), prune(), weld())
   // One pass at a tight error often stops short of the target, so allow a little
   // more geometric error per pass and stop as soon as the model fits
@@ -67,7 +90,7 @@ async function buildModels(models, lock, force) {
       console.log(`fresh  ${manifest.id}`)
       continue
     }
-    await optimizeModel(io, source, outPath, maxTrianglesFor(manifest))
+    await optimizeModel(io, source, outPath, manifest)
     const outBuf = await readFile(outPath)
     next[manifest.id] = { ...entry, outputHash: sha256(outBuf), ...describe(outBuf) }
     const kb = (n) => `${Math.round(n / 1024)}KB`

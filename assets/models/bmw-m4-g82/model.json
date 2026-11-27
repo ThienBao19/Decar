@@ -13,6 +13,19 @@
   "years": {
     "from": 2021
   },
+  "textureFixes": [
+    {
+      "material": "interior7",
+      "rect": [
+        0,
+        0,
+        1,
+        0.0625
+      ],
+      "color": "#262628",
+      "reason": "The top strip of the interior atlas is a placeholder olive-yellow that the floor and lower dash sample; the real car's are anthracite."
+    }
+  ],
   "studio": {
     "lengthM": 4.79,
     "forward": "+z",

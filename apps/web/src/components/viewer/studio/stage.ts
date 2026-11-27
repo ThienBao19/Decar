@@ -9,8 +9,11 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 
 import { FLOOR_REFLECTION_SHADER } from './floor-reflection'
 
-export const BACKGROUND = '#0f1012'
-const FLOOR_CENTER = '#232428'
+// Graphite rather than black: a lit studio cyc, brightest above the car and settling to
+// BACKGROUND at the horizon, where the floor fades into it
+export const BACKGROUND = '#1d1f23'
+const BACKDROP_TOP = '#3a3d44'
+const FLOOR_CENTER = '#383a40'
 const MIRROR_RADIUS = 5
 const FLOOR_RADIUS = 14
 
@@ -77,6 +80,23 @@ export function radialTexture(stops: [number, string][]): THREE.CanvasTexture {
   return tex
 }
 
+// Screen-space vertical gradient; the floor covers the lower half, so it only shows above the horizon
+function backdropTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas')
+  canvas.width = 2
+  canvas.height = 256
+  const ctx = canvas.getContext('2d')!
+  const g = ctx.createLinearGradient(0, 0, 0, 256)
+  g.addColorStop(0, BACKDROP_TOP)
+  g.addColorStop(0.55, BACKGROUND)
+  g.addColorStop(1, BACKGROUND)
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, 2, 256)
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.colorSpace = THREE.SRGBColorSpace
+  return tex
+}
+
 function flatDisc(radius: number, y: number, material: THREE.Material): THREE.Mesh {
   const mesh = new THREE.Mesh(new THREE.CircleGeometry(radius, 96), material)
   mesh.rotation.x = -Math.PI / 2
@@ -125,7 +145,7 @@ function buildFloor(scene: THREE.Scene, el: HTMLElement, quality: StageQuality) 
 }
 
 export function buildStage(scene: THREE.Scene, el: HTMLElement, quality: StageQuality): StageParts {
-  scene.background = new THREE.Color(BACKGROUND)
+  scene.background = backdropTexture()
   const { mirror, floor } = buildFloor(scene, el, quality)
 
   const key = new THREE.DirectionalLight(0xffffff, 0.8)
@@ -177,6 +197,7 @@ export function createComposer(
 }
 
 export function disposeScene(scene: THREE.Scene) {
+  if (scene.background instanceof THREE.Texture) scene.background.dispose()
   scene.traverse((obj) => {
     // Reflector owns a render target that normal material disposal misses
     if (obj instanceof Reflector) return obj.dispose()
