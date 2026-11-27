@@ -103,24 +103,38 @@ model Subscription {
 }
 
 model Vehicle {
-  id           String              @id @default(cuid())
-  make         String
-  model        String
-  year         Int
-  market       String
-  trimLevel    String?
-  slug         String              @unique
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
-  engine       Engine?
-  exterior     Exterior?
-  interior     Interior?
-  media        Media[]
-  comparisonsA VehicleComparison[] @relation("VehicleA")
-  comparisonsB VehicleComparison[] @relation("VehicleB")
+  id              String              @id @default(cuid())
+  make            String
+  model           String
+  year            Int
+  market          String
+  trimLevel       String?
+  slug            String              @unique
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  engine          Engine?
+  exterior        Exterior?
+  interior        Interior?
+  media           Media[]
+  comparisonsA    VehicleComparison[] @relation("VehicleA")
+  comparisonsB    VehicleComparison[] @relation("VehicleB")
+  modelAssignment VehicleModel?
 
   @@index([make, model, year])
   @@index([slug])
+}
+
+// An admin's choice of 3D model for one vehicle, overriding the automatic match from
+// assets/models/*/model.json (aliases + years). assetId null means "no 3D model, show
+// photos". No row means the automatic match applies.
+model VehicleModel {
+  vehicleId String   @id
+  assetId   String?
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
 }
 
 model Engine {
@@ -158,14 +172,14 @@ model Color {
 }
 
 model Interior {
-  id           String  @id @default(cuid())
-  vehicleId    String  @unique
+  id           String   @id @default(cuid())
+  vehicleId    String   @unique
   seatMaterial String
   seatRows     Int
   seatCount    Int
   dashboard    String
   techFeatures String[]
-  vehicle      Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicle      Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
 }
 
 model Media {
