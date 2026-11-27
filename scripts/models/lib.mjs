@@ -112,10 +112,17 @@ function validateTextureFixes(fixes, where, errors) {
   })
 }
 
+function validateParts(parts, where, errors) {
+  checkKeys(parts, ['wheels', 'brakes'], where, errors)
+  checkStringArray(parts.wheels ?? [], `${where}.wheels`, errors)
+  if (!parts.wheels?.length) errors.push(`${where}.wheels: material substrings of the wheel and tyre geometry are required`)
+  if (parts.brakes !== undefined) checkStringArray(parts.brakes, `${where}.brakes`, errors)
+}
+
 export function validateModel(m, folder) {
   const errors = []
   const where = `assets/models/${folder}/model.json`
-  checkKeys(m, ['id', 'title', 'credit', 'match', 'years', 'studio', 'budgetException', 'textureFixes', 'notes'], where, errors)
+  checkKeys(m, ['id', 'title', 'credit', 'match', 'years', 'studio', 'budgetException', 'textureFixes', 'parts', 'notes'], where, errors)
   if (m.id !== folder || !ID_PATTERN.test(m.id ?? '')) errors.push(`${where}.id: must equal the folder name and be kebab-case`)
   if (typeof m.title !== 'string' || !m.title) errors.push(`${where}.title: required`)
   validateCredit(m.credit, where, errors)
@@ -125,11 +132,17 @@ export function validateModel(m, folder) {
     checkKeys(m.budgetException, ['maxTriangles', 'reason'], `${where}.budgetException`, errors)
     if (!m.budgetException.reason) errors.push(`${where}.budgetException.reason: explain why the budget is exceeded`)
   }
+  if (m.parts !== undefined) {
+    validateParts(m.parts, `${where}.parts`, errors)
+    if (!m.studio) errors.push(`${where}.parts: needs studio.forward to tell front from rear`)
+  }
   if (m.textureFixes !== undefined) validateTextureFixes(m.textureFixes, `${where}.textureFixes`, errors)
   if (m.years) validateYears(m.years, `${where}.years`, errors)
   if (m.studio) {
     validateStudio(m.studio, `${where}.studio`, errors)
     if (!m.years) errors.push(`${where}.years: required with studio, so the model is only shown for its own generation`)
+    if (!m.parts) errors.push(`${where}.parts: required with studio, so wheels can spin and steer (see "Parts contract")`)
+    if (m.credit?.license === 'UNVERIFIED') errors.push(`${where}.credit.license: a studio model must have a verified license`)
   }
   return errors
 }
@@ -169,7 +182,9 @@ export function modelConfigHash(manifest) {
   const config = { pipeline: PIPELINE_VERSION, maxTriangles: maxTrianglesFor(manifest), maxTexture: MAX_TEXTURE_SIZE }
   // Only hashed when present, so adding the field left every other model's build untouched
   const fixes = manifest.textureFixes?.map(({ material, rect, color }) => ({ material, rect, color }))
-  return sha256(stableJson(fixes?.length ? { ...config, textureFixes: fixes } : config))
+  // parts.mjs reads only forward from studio
+  const parts = manifest.parts ? { ...manifest.parts, forward: manifest.studio?.forward } : undefined
+  return sha256(stableJson({ ...config, ...(fixes?.length && { textureFixes: fixes }), ...(parts && { parts }) }))
 }
 
 // Bump when environment processing changes so every environment rebuilds

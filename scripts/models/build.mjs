@@ -16,6 +16,7 @@ import {
   loadAssets, maxTrianglesFor, modelConfigHash, prettyJson, readGlbJson, renderRegistry, sha256,
 } from './lib.mjs'
 import { decodeHdr, encodeHdr, softenHighlights } from './hdr.mjs'
+import { splitParts } from './parts.mjs'
 
 const SIMPLIFY_ERRORS = [0.002, 0.005, 0.01]
 
@@ -52,6 +53,7 @@ async function optimizeModel(io, sourcePath, outPath, manifest) {
   const maxTriangles = maxTrianglesFor(manifest)
   const doc = await io.read(sourcePath)
   await applyTextureFixes(doc, manifest)
+  splitParts(doc, manifest)
   await doc.transform(dedup(), prune(), weld())
   // One pass at a tight error often stops short of the target, so allow a little
   // more geometric error per pass and stop as soon as the model fits

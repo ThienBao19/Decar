@@ -26,6 +26,14 @@
       "reason": "The top strip of the interior atlas is a placeholder olive-yellow that the floor and lower dash sample; the real car's are anthracite."
     }
   ],
+  "parts": {
+    "wheels": [
+      "m8rim"
+    ],
+    "brakes": [
+      "caliper"
+    ]
+  },
   "studio": {
     "lengthM": 4.79,
     "forward": "+z",

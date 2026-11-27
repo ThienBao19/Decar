@@ -9,9 +9,9 @@
   },
   "models": {
     "bmw-m4-g82": {
-      "bytes": 1986980,
-      "configHash": "d776ebe5d79b779e1dba05af88a75354a7f8f526811161b1c4a32f69c8c70043",
-      "outputHash": "82a496d771bb2780e6edfa333aba781399f8ccb7dfab9e91fa9312a942f9a27d",
+      "bytes": 2012356,
+      "configHash": "ec9b6c89fba74c4af4a2d85f056a96fe3516197bbd22c074be27c8fe4bcd2786",
+      "outputHash": "26f300af33067273564acdf1b007ff1bdf9dedd9b303571cd6f610e2515733da",
       "sourceHash": "913ac951ba2645777c91393b86aed2def2433a807e57e626b203908aa474b8fb",
       "textures": 9,
       "triangles": 206593
