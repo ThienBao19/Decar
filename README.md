@@ -94,8 +94,8 @@ Vehicle ──── Engine
 
 - Node.js 20+
 - pnpm 9+
-- PostgreSQL (or a Supabase connection string)
-- Redis
+- Docker (runs the local PostgreSQL on port 5434)
+- Redis *(optional — caching is skipped without it)*
 - Elasticsearch 8 *(optional — falls back to DB search)*
 
 ### 1. Clone & install
@@ -120,8 +120,8 @@ Key variables:
 
 | Variable | Description |
 |---|---|
-| `DATABASE_URL` | PostgreSQL connection string (pooled) |
-| `DIRECT_URL` | PostgreSQL direct connection (Prisma migrations) |
+| `DATABASE_URL` | Local: `postgresql://postgres:postgres@localhost:5434/decar` |
+| `DIRECT_URL` | Same as `DATABASE_URL` locally (Prisma migrations) |
 | `REDIS_URL` | Redis connection string |
 | `NEXTAUTH_SECRET` | Random 32-char secret |
 | `NEXTAUTH_URL` | `http://localhost:3000` in dev |
@@ -131,19 +131,18 @@ Key variables:
 | `STRIPE_PRO_PRICE_ID` | Stripe Price ID for the Pro plan |
 | `AWS_ACCESS_KEY_ID` | S3 / R2 credentials |
 | `AWS_SECRET_ACCESS_KEY` | S3 / R2 credentials |
-| `S3_BUCKET_NAME` | Bucket name |
-| `S3_ENDPOINT` | Endpoint URL (set for R2) |
+| `S3_BUCKET` | Bucket name |
+| `CLOUDFLARE_R2_ENDPOINT` | Endpoint URL (set for R2) |
 | `ELASTICSEARCH_URL` | ES node URL *(optional)* |
-| `ADMIN_EMAIL` | Admin account email |
-| `ADMIN_PASSWORD` | Admin account password (hashed on first seed) |
 
-### 3. Migrate & seed database
+### 3. Start and seed the local database
 
 ```bash
-cd apps/api
-pnpm prisma migrate deploy
-pnpm tsx prisma/seed.ts
+pnpm db:up      # PostgreSQL 16 in Docker on localhost:5434
+pnpm db:setup   # apply migrations, seed sample vehicles
 ```
+
+Keep local `.env` files on this database. Pointing them at production means every local page view, test and seed writes to real data. Admin access is the `isAdmin` flag on a user; set it in `pnpm --filter @decar/api db:studio`.
 
 ### 4. Index vehicles into Elasticsearch *(optional)*
 
