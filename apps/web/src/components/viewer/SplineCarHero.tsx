@@ -3,8 +3,14 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 
-const Porsche911DrivingViewer = dynamic(
-  () => import('@/components/viewer/Porsche911DrivingViewer').then((m) => m.Porsche911DrivingViewer),
+import { getModel } from '@/lib/model-registry'
+
+// The hero drives a car that meets the realism bar (docs/models.md)
+const HERO_MODEL = getModel('bmw-m4-g82')
+const HERO_SOURCE = HERO_MODEL ? { kind: 'model' as const, entry: HERO_MODEL } : null
+
+const DriveViewer = dynamic(
+  () => import('@/components/viewer/DriveViewer2').then((m) => m.DriveViewer2),
   {
     ssr: false,
     loading: () => (
@@ -107,19 +113,19 @@ export function SplineCarHero() {
                 Interactive Drive
               </span>
               <div className="flex flex-col gap-1">
-                <p className="font-mono text-[11px] uppercase tracking-[1.6px] text-[#4d4d4d]">McLaren</p>
+                <p className="font-mono text-[11px] uppercase tracking-[1.6px] text-[#4d4d4d]">BMW</p>
                 <h2 className="text-[clamp(32px,4vw,52px)] font-semibold leading-[1.0] tracking-tight text-[#fafafa]">
-                  P1<br /><span className="text-[#ff8c00]"></span>
+                  M4 Competition<br /><span className="text-[#ff8c00]"></span>
                 </h2>
               </div>
               <p className="max-w-[240px] text-[13px] leading-[1.6] text-[#4d4d4d]">
                 Click the view and use arrow keys to drive. Hold Shift for nitro.
               </p>
               <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#1e1e22] bg-[#0d0d10] px-5 py-4">
-                <Stat label="Engine" value="3.8L V8 + E" />
-                <Stat label="Power" value="903 hp" />
-                <Stat label="Torque" value="900 Nm" />
-                <Stat label="0-100" value="2.8 s" />
+                <Stat label="Engine" value="3.0L I6 twin-turbo" />
+                <Stat label="Power" value="503 hp" />
+                <Stat label="Torque" value="650 Nm" />
+                <Stat label="0-100" value="3.9 s" />
               </div>
               {speed > 0 && (
                 <div className="flex items-baseline gap-2 rounded-xl border border-[#1e1e22] bg-[#0d0d10] px-5 py-3">
@@ -150,13 +156,12 @@ export function SplineCarHero() {
           {/* RIGHT: 3D viewer */}
           <div className="relative flex-1 overflow-hidden md:min-h-0" style={{ minHeight: isFullscreen ? '100vh' : 320 }}>
             <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-black/60 to-transparent" />
-            <Porsche911DrivingViewer
+            {HERO_SOURCE && <DriveViewer
               className="h-full w-full"
-              make="McLaren"
-              model="P1"
+              source={HERO_SOURCE}
               onSpeedChange={handleSpeedChange}
               onRevChange={handleRevChange}
-            />
+            />}
             {[
               'top-3 left-3 border-t border-l',
               'top-3 right-3 border-t border-r',

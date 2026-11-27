@@ -1,45 +1,115 @@
 'use client'
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import * as THREE from 'three'
-import { createDrivingState, createKeyState, handleKeyDown, handleKeyUp, updateDriving, applyToCarGroup, updateChaseCamera, type DrivingState, type KeyState } from './porsche911/driving-controls'
-import { buildRig } from './drive-map/scene-builder'
-const KEYS = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight','Space']
-interface Props { className?: string; make?: string; model?: string; bodyType?: string | null; bodyColor?: number; onSpeedChange?: (s: number) => void; onRevChange?: (r: boolean) => void; onDriftChange?: (d: boolean) => void }
-export function DriveViewer2({ className, make, model, bodyType, bodyColor, onSpeedChange, onRevChange, onDriftChange }: Props) {
+
+import {
+  createDrivingState, createKeyState, handleKeyDown, handleKeyUp, updateDriving, applyToCarGroup, updateChaseCamera,
+} from './porsche911/driving-controls'
+import { buildRig, type DriveSource } from './drive-map/scene-builder'
+
+const KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight', 'Space']
+const HUD_INTERVAL_S = 0.12
+const FOV = 50
+
+interface Props {
+  className?: string
+  source: DriveSource
+  onSpeedChange?: (kmh: number) => void
+  onRevChange?: (isRevving: boolean) => void
+  onDriftChange?: (isDrifting: boolean) => void
+}
+
+export function DriveViewer2({ className, source, onSpeedChange, onRevChange, onDriftChange }: Props) {
   const mountRef = useRef<HTMLDivElement>(null)
+  const [hasFailed, setHasFailed] = useState(false)
   const handleClick = useCallback(() => mountRef.current?.focus(), [])
+
   useEffect(() => {
-    const el = mountRef.current; if (!el) return
-    const rig = buildRig(el, bodyColor, make, model, bodyType); const { renderer, scene, car, grid, dir, exhaust, sparks } = rig
-    const focused: [boolean] = [false]; const ds: [DrivingState] = [createDrivingState()]; const ks: [KeyState] = [createKeyState()]
-    const cp: [THREE.Vector3] = [new THREE.Vector3(0, 3, -8)]; const cl: [THREE.Vector3] = [new THREE.Vector3(0, 1, 4)]
-    const cam: [THREE.PerspectiveCamera] = [new THREE.PerspectiveCamera(50, el.clientWidth / el.clientHeight, 0.5, 200)]
-    cam[0].position.copy(cp[0])
-    const raf: [number] = [0]; const ht: [number] = [0]; const gt: [number] = [0]; const rt: [ReturnType<typeof setTimeout> | null] = [null]
-    const onFocus = () => { focused[0] = true }; const onBlur = () => { focused[0] = false }
-    el.addEventListener('focus', onFocus); el.addEventListener('blur', onBlur)
-    const onKD = (e: KeyboardEvent) => { if (!focused[0]) return; if (KEYS.includes(e.code)) e.preventDefault(); ks[0] = handleKeyDown(ks[0], e.code) }
-    const onKU = (e: KeyboardEvent) => { ks[0] = handleKeyUp(ks[0], e.code) }
-    window.addEventListener('keydown', onKD); window.addEventListener('keyup', onKU)
+    const el = mountRef.current
+    if (!el) return
+    const rig = buildRig(el, source, () => setHasFailed(true))
+    const camera = new THREE.PerspectiveCamera(FOV, el.clientWidth / el.clientHeight, 0.3, 1000)
+    let state = createDrivingState()
+    let keys = createKeyState()
+    let camPos = new THREE.Vector3(0, 3, -8)
+    let camLook = new THREE.Vector3(0, 1, 4)
+    let isFocused = false
+    let hudTimer = 0
+    let raf = 0
+    camera.position.copy(camPos)
+
+    const onFocus = () => { isFocused = true }
+    const onBlur = () => { isFocused = false }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!isFocused) return
+      if (KEYS.includes(e.code)) e.preventDefault()
+      keys = handleKeyDown(keys, e.code)
+    }
+    const onKeyUp = (e: KeyboardEvent) => { keys = handleKeyUp(keys, e.code) }
+    el.addEventListener('focus', onFocus)
+    el.addEventListener('blur', onBlur)
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+
     const clock = new THREE.Clock()
     const animate = () => {
-      raf[0] = requestAnimationFrame(animate)
+      raf = requestAnimationFrame(animate)
       const dt = Math.min(clock.getDelta(), 0.05)
-      ds[0] = updateDriving(ds[0], ks[0], dt); const s = ds[0]; applyToCarGroup(car, s, dt)
-      if (s.nitroBoost > 0.05) { exhaust.trigger(s.nitroBoost); exhaust.update(new THREE.Vector3(s.posX, 0, s.posZ), s.heading, s.speed, dt) } else { exhaust.stop(); exhaust.update(new THREE.Vector3(s.posX, 0, s.posZ), s.heading, s.speed, dt) }
-      if (s.isDrifting && s.driftIntensity > 0.1) { const rz = s.posZ - Math.cos(s.heading + Math.PI / 2) * 1.35; sparks.spawn(s.posX + Math.cos(s.heading) * 0.88, rz, s.heading, s.driftIntensity); sparks.spawn(s.posX - Math.cos(s.heading) * 0.88, rz, s.heading, s.driftIntensity) }
-      sparks.update(dt)
-      gt[0] += dt; if (gt[0] > 0.1) { gt[0] = 0; grid.position.set(s.posX, -0.46, s.posZ) }
-      dir.position.set(s.posX + 5, 10, s.posZ + 5)
-      const { camPos, camLook } = updateChaseCamera(cam[0], s, cp[0], cl[0], dt); cp[0] = camPos; cl[0] = camLook
-      if (s.nitroBoost > 0.3) cam[0].position.add(new THREE.Vector3((Math.random() - 0.5) * 0.025 * s.nitroBoost, (Math.random() - 0.5) * 0.015 * s.nitroBoost, 0))
-      renderer.render(scene, cam[0])
-      ht[0] += dt; if (ht[0] > 0.12) { ht[0] = 0; onSpeedChange?.(Math.abs(Math.round(s.speed * 3.6))); onRevChange?.(s.isRevving); onDriftChange?.(s.isDrifting) }
+      state = updateDriving(state, keys, dt)
+      applyToCarGroup(rig.car, state, dt)
+      rig.updateWheels(state.speed, state.steerAngle, dt)
+      rig.follow(state.posX, state.posZ)
+
+      const carPos = new THREE.Vector3(state.posX, 0, state.posZ)
+      if (state.nitroBoost > 0.05) rig.exhaust.trigger(state.nitroBoost)
+      else rig.exhaust.stop()
+      rig.exhaust.update(carPos, state.heading, state.speed, dt)
+      if (state.isDrifting && state.driftIntensity > 0.1) {
+        const rearZ = state.posZ - Math.cos(state.heading + Math.PI / 2) * 1.35
+        rig.sparks.spawn(state.posX + Math.cos(state.heading) * 0.88, rearZ, state.heading, state.driftIntensity)
+        rig.sparks.spawn(state.posX - Math.cos(state.heading) * 0.88, rearZ, state.heading, state.driftIntensity)
+      }
+      rig.sparks.update(dt)
+
+      ;({ camPos, camLook } = updateChaseCamera(camera, state, camPos, camLook, dt))
+      rig.renderer.render(rig.scene, camera)
+
+      hudTimer += dt
+      if (hudTimer > HUD_INTERVAL_S) {
+        hudTimer = 0
+        onSpeedChange?.(Math.abs(Math.round(state.speed * 3.6)))
+        onRevChange?.(state.isRevving)
+        onDriftChange?.(state.isDrifting)
+      }
     }
     animate()
-    const obs = new ResizeObserver(() => { if (rt[0]) clearTimeout(rt[0]); rt[0] = setTimeout(() => { if (!el) return; renderer.setSize(el.clientWidth, el.clientHeight); const nc = new THREE.PerspectiveCamera(50, el.clientWidth / el.clientHeight, 0.5, 200); nc.position.copy(cp[0]); cam[0] = nc }, 100) })
-    obs.observe(el)
-    return () => { cancelAnimationFrame(raf[0]); if (rt[0]) clearTimeout(rt[0]); el.removeEventListener('focus', onFocus); el.removeEventListener('blur', onBlur); window.removeEventListener('keydown', onKD); window.removeEventListener('keyup', onKU); obs.disconnect(); rig.dispose() }
-  }, [onSpeedChange, onRevChange, onDriftChange, bodyColor, make, model, bodyType])
-  return <div ref={mountRef} className={className ?? 'w-full h-full'} tabIndex={0} onClick={handleClick} style={{ outline: 'none', cursor: 'pointer' }} />
+
+    const observer = new ResizeObserver(() => {
+      rig.renderer.setSize(el.clientWidth, el.clientHeight)
+      camera.aspect = el.clientWidth / el.clientHeight
+      camera.updateProjectionMatrix()
+    })
+    observer.observe(el)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      el.removeEventListener('focus', onFocus)
+      el.removeEventListener('blur', onBlur)
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+      observer.disconnect()
+      rig.dispose()
+    }
+  }, [source, onSpeedChange, onRevChange, onDriftChange])
+
+  return (
+    <div className='relative h-full w-full'>
+      <div ref={mountRef} className={className ?? 'h-full w-full'} tabIndex={0} onClick={handleClick} style={{ outline: 'none', cursor: 'pointer' }} />
+      {hasFailed && (
+        <div className='absolute inset-0 flex items-center justify-center text-[13px] text-[#898989]'>
+          The 3D model could not be loaded.
+        </div>
+      )}
+    </div>
+  )
 }

@@ -1,26 +1,29 @@
 'use client'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
+
+import type { ModelEntry } from '@/lib/model-registry'
 
 const Viewer = dynamic(
   () => import('./DriveViewer2').then((m) => ({ default: m.DriveViewer2 })),
   { ssr: false, loading: () => <div className='flex h-full items-center justify-center text-[#4d4d4d] text-[13px]'>Loading…</div> },
 )
 
-interface Props { make: string; model: string; bodyType?: string | null | undefined; bodyColor?: number | undefined }
+// Only rendered for vehicles with their own studio model: never a stand-in car
+interface Props { title: string; model: ModelEntry }
 
-export function VehicleDriveSection({ make, model, bodyType, bodyColor }: Props) {
+export function VehicleDriveSection({ title, model }: Props) {
   const [speed, setSpeed] = useState(0)
   const [revving, setRevving] = useState(false)
   const [drifting, setDrifting] = useState(false)
   const onSpeed = useCallback((s: number) => setSpeed(s), [])
   const onRev = useCallback((r: boolean) => setRevving(r), [])
   const onDrift = useCallback((d: boolean) => setDrifting(d), [])
+  const source = useMemo(() => ({ kind: 'model' as const, entry: model }), [model])
 
   return (
     <div className='relative w-full overflow-hidden rounded-xl border border-[#2e2e2e] bg-[#0f0f0f]' style={{ height: 420 }}>
-      <Viewer className='w-full h-full' make={make} model={model} bodyType={bodyType ?? null} {...(bodyColor !== undefined ? { bodyColor } : {})}
-        onSpeedChange={onSpeed} onRevChange={onRev} onDriftChange={onDrift} />
+      <Viewer className='w-full h-full' source={source} onSpeedChange={onSpeed} onRevChange={onRev} onDriftChange={onDrift} />
       <div className='pointer-events-none absolute bottom-4 left-4 flex items-end gap-3'>
         <div className='rounded-lg border border-[#2e2e2e] bg-[#0f0f0f]/80 px-3 py-2 backdrop-blur-sm'>
           <p className='text-[10px] uppercase tracking-widest text-[#4d4d4d]'>Speed</p>
@@ -34,7 +37,7 @@ export function VehicleDriveSection({ make, model, bodyType, bodyColor }: Props)
         <p>W / ↑ accelerate &nbsp;·&nbsp; A D steer &nbsp;·&nbsp; S / ↓ reverse</p>
         <p className='mt-0.5 text-[#3a3a3a]'>Hold Shift — nitro 🔥 &nbsp;·&nbsp; Space — handbrake ✨</p>
       </div>
-      <div className='pointer-events-none absolute left-4 top-4 text-[11px] font-medium text-[#898989]'>{make} {model} — Click to focus</div>
+      <div className='pointer-events-none absolute left-4 top-4 text-[11px] font-medium text-[#898989]'>{title} — Click to focus</div>
     </div>
   )
 }
