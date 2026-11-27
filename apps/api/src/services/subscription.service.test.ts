@@ -217,6 +217,39 @@ describe('handleWebhookEvent', () => {
     )
   })
 
+  it('should read the period end from items on newer Stripe API versions', async () => {
+    const prisma = makePrisma()
+    const redis  = makeRedis()
+    const periodEnd = 1_800_000_000
+
+    const event = makeEvent('customer.subscription.updated', {
+      customer: 'cus_123',
+      status:   'active',
+      items:    { data: [{ current_period_end: periodEnd }] },
+    })
+
+    await handleWebhookEvent(prisma, redis, event)
+
+    expect(prisma.subscription.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ tier: 'PRO', currentPeriodEnd: new Date(periodEnd * 1000) }),
+      }),
+    )
+  })
+
+  it('should still update the tier when the event has no period end', async () => {
+    const prisma = makePrisma()
+    const redis  = makeRedis()
+
+    const event = makeEvent('customer.subscription.updated', { customer: 'cus_123', status: 'active' })
+
+    await handleWebhookEvent(prisma, redis, event)
+
+    const call = vi.mocked(prisma.subscription.update).mock.calls[0]?.[0] as { data: Record<string, unknown> }
+    expect(call.data).toMatchObject({ tier: 'PRO', status: 'ACTIVE' })
+    expect(call.data).not.toHaveProperty('currentPeriodEnd')
+  })
+
   it('should set tier to FREE when subscription status is past_due on subscription.updated', async () => {
     const prisma = makePrisma()
     const redis  = makeRedis()
