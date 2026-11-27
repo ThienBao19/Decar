@@ -45,6 +45,7 @@ screenshots as the `model-snapshots` artifact for review.
   "credit": { "author": "…", "license": "CC-BY-4.0", "source": "https://…" },
   "match": ["bmw m4 competition", "bmw m4"],
   "years": { "from": 2021 },
+  "parts": { "wheels": ["m8rim"], "brakes": ["caliper"] },
   "studio": {
     "lengthM": 4.79,
     "forward": "+z",
@@ -61,11 +62,47 @@ screenshots as the `model-snapshots` artifact for review.
    - `lengthM`: real body length in metres; the model is scaled to it.
    - `forward`: axis the nose points along in the file. Check it with the snapshot: the `front34` image must show the front.
    - Keys under `materials`, `paint.materials` and `lights` are case-insensitive substrings of glTF material names; `models:check` rejects keys that match nothing.
+   - `parts`: `{ "wheels": ["m8rim"], "brakes": ["caliper"] }`, material substrings of the wheel/tyre and brake geometry. Required with `studio`; see **Parts contract**.
    - `textureFixes`: `[{ "material": "interior7", "rect": [0, 0, 1, 0.0625], "color": "#262628", "reason": "…" }]` paints a rectangle (`[left, top, right, bottom]`, 0..1) of a material's base colour texture before compression, for atlas regions the author left as a placeholder. Prefer fixing the source; use this when the source is a third-party download.
    - `budgetException`: `{ "maxTriangles": n, "reason": "…" }` when a model legitimately exceeds 250k triangles.
 4. Run `pnpm models:build`, then `pnpm models:check`.
-5. Start the web app and run `pnpm models:snapshot`; open `artifacts/model-snapshots/index.html` and check all four views.
+5. Start the web app and run `pnpm models:snapshot`; open `artifacts/model-snapshots/index.html` and go through the **Realism checklist** on all four views.
 6. Commit `assets/`, `apps/web/public/models/`, `apps/web/public/environments/` and `apps/web/src/generated/` together.
+
+## Parts contract
+
+Every studio model's output has these nodes, so the studio and the drive scene can move
+parts without knowing anything about the source file:
+
+| Node | Contents | Moves |
+|---|---|---|
+| `wheel_FL`, `wheel_FR`, `wheel_RL`, `wheel_RR` | rim, tyre, hub | spin about the car's lateral axis; front pair also steers about the vertical axis |
+| `brake_FL` … `brake_RR` (when `parts.brakes` is set) | caliper, and disc if it shares the material | steers with its wheel, never spins |
+
+- F/R and L/R are from the driver's seat: facing `studio.forward` with y up, left is up × forward.
+- Each node is a direct child of the scene, with a translation (the wheel centre) and no rotation or scale; vertices are relative to that centre. A brake uses its wheel's centre, so both steer about the same pivot.
+- The build makes these nodes: it takes the primitives whose material matches `parts.wheels` / `parts.brakes`, sorts their triangles into the four corners around the model's centre, and moves them to new nodes. So a source with all four wheels in one mesh works as is; the material substrings must not match body panels.
+- `models:check` fails if a node is missing, not at its corner (usually a wrong `studio.forward`), has rotation or scale, or if the wheel diameter is outside 0.15–0.4 × the wheelbase.
+
+## Realism checklist
+
+A model gets `studio` only when it passes all of this; otherwise the vehicle shows photos.
+
+Checked by `models:check`:
+- [ ] License verified (`UNVERIFIED` is rejected for studio models)
+- [ ] At least 50k triangles and 8 materials: below that it reads as a toy
+- [ ] See-through glass (a BLEND material or a studio override with `opacity` < 1)
+- [ ] At least one factory paint preset, head and tail light materials
+- [ ] Parts contract met, wheel size plausible for the wheelbase
+
+Checked by eye in the four snapshots:
+- [ ] `front34` shows the front (otherwise `forward` is wrong)
+- [ ] Proportions match photos of the real car: wheelbase, overhangs, roof height, wheel size
+- [ ] Panel gaps, badges and lights are modelled, not painted flat
+- [ ] An interior is visible through the glass, in plausible colours (use `textureFixes` for placeholder regions)
+- [ ] Tyres have sidewalls and the rims have depth; brakes visible behind the spokes
+- [ ] Paint reads as clear-coated: sharp reflections, no blotchy or faceted highlights
+- [ ] No holes, flipped faces, floating parts, or z-fighting
 
 ## Studio environments
 
