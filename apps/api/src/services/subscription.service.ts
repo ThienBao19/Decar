@@ -99,12 +99,13 @@ export async function handleWebhookEvent(
       if (!userId) break
 
       const isActive = sub.status === 'active' || sub.status === 'trialing'
+      const periodEnd = periodEndSeconds(sub)
       await prisma.subscription.update({
         where: { userId },
         data: {
           tier: isActive ? 'PRO' : 'FREE',
           status: mapStripeStatus(sub.status),
-          currentPeriodEnd: new Date(sub.current_period_end * 1000),
+          ...(periodEnd !== null && { currentPeriodEnd: new Date(periodEnd * 1000) }),
         },
       })
       await redis?.del(`user:${userId}:tier`)
@@ -137,6 +138,15 @@ export async function handleWebhookEvent(
       break
     }
   }
+}
+
+// The payload follows the webhook endpoint's API version, not the SDK's: from 2025 Stripe moved
+// current_period_end from the subscription onto its items
+function periodEndSeconds(sub: Stripe.Subscription): number | null {
+  const legacy = (sub as { current_period_end?: unknown }).current_period_end
+  if (typeof legacy === 'number') return legacy
+  const fromItem = (sub.items?.data?.[0] as { current_period_end?: unknown } | undefined)?.current_period_end
+  return typeof fromItem === 'number' ? fromItem : null
 }
 
 async function resolveUserId(prisma: PrismaClient, stripeCustomerId: string): Promise<string | null> {
