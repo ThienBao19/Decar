@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin'
+import { listStudioModels } from '@/lib/model-registry'
 
 function requireField(form: FormData, key: string): string {
   const value = form.get(key)
@@ -54,4 +55,22 @@ export async function deleteVehicle(form: FormData) {
     prisma.vehicle.delete({ where: { id: vehicleId } }),
   ])
   revalidatePath('/admin/vehicles')
+}
+
+// choice: "auto" (drop the assignment, use alias + year matching), "none" (photos only),
+// or the id of a studio model
+export async function setVehicleModel(form: FormData) {
+  const session = await requireAdmin()
+  const vehicleId = requireField(form, 'vehicleId')
+  const choice = requireField(form, 'choice')
+  if (choice === 'auto') {
+    await prisma.vehicleModel.deleteMany({ where: { vehicleId } })
+  } else {
+    const isStudioModel = listStudioModels().some((m) => m.id === choice)
+    if (choice !== 'none' && !isStudioModel) throw new Error('Unknown studio model')
+    const data = { assetId: choice === 'none' ? null : choice, updatedBy: session.user.id }
+    await prisma.vehicleModel.upsert({ where: { vehicleId }, create: { vehicleId, ...data }, update: data })
+  }
+  revalidatePath('/admin/vehicles')
+  revalidatePath('/admin/models')
 }

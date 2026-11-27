@@ -91,6 +91,21 @@ export function getStudioModel(make: string, model: string, year: number): Model
   return year >= from && year <= to ? entry : null
 }
 
+export function listStudioModels(): ModelEntry[] {
+  return MODELS.filter((m) => m.studio !== null)
+}
+
+// An admin assignment (the VehicleModel table) wins over the automatic match:
+// an assetId picks that model for any year, null means photos only
+export function resolveStudioModel(
+  vehicle: { make: string; model: string; year: number },
+  assignment: { assetId: string | null } | null,
+): ModelEntry | null {
+  if (!assignment) return getStudioModel(vehicle.make, vehicle.model, vehicle.year)
+  const entry = assignment.assetId ? getModel(assignment.assetId) : null
+  return entry?.studio ? entry : null
+}
+
 export function listCredits(): { title: string; credit: Credit }[] {
   return [...MODELS, ...ENVIRONMENTS].map(({ title, credit }) => ({ title, credit }))
 }

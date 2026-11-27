@@ -10,7 +10,8 @@ import { VehicleImageGallery } from '@/components/vehicle/VehicleImageGallery'
 import { VehicleDriveSection } from '@/components/viewer/VehicleDriveSection'
 import { SaveComparisonButton } from '@/components/vehicle/SaveComparisonButton'
 import { formatPower, formatTorque } from '@/lib/engine-format'
-import { getStudioModel } from '@/lib/model-registry'
+import { resolveStudioModel } from '@/lib/model-registry'
+import { prisma } from '@/lib/prisma'
 const StudioViewer = dynamic(
   () => import('@/components/viewer/StudioViewer').then((m) => m.StudioViewer),
   {
@@ -62,7 +63,8 @@ export default async function VehicleDetailPage({ params }: PageProps) {
   const fuelLabel = v.engine?.fuelType ?? 'N/A'
   const galleryImages = getVehicleGalleryUrls(v.make, v.model, v.year)
   const vehicleTitle = `${v.year} ${v.make} ${v.model}`
-  const studioModel = getStudioModel(v.make, v.model, v.year)
+  const assignment = await prisma.vehicleModel.findUnique({ where: { vehicleId: v.id }, select: { assetId: true } })
+  const studioModel = resolveStudioModel(v, assignment)
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">

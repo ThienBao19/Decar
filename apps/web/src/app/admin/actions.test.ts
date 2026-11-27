@@ -11,11 +11,12 @@ const prisma = {
   vehicleBuild: { update: vi.fn(), delete: vi.fn() },
   vehicleComparison: { deleteMany: vi.fn(() => 'deleteComparisons') },
   vehicle: { delete: vi.fn(() => 'deleteVehicle') },
+  vehicleModel: { upsert: vi.fn(), deleteMany: vi.fn() },
   $transaction: vi.fn(),
 }
 vi.mock('@/lib/prisma', () => ({ prisma }))
 
-const { setUserTier, setUserAdmin, deleteVehicle } = await import('./actions')
+const { setUserTier, setUserAdmin, deleteVehicle, setVehicleModel } = await import('./actions')
 
 function form(fields: Record<string, string>): FormData {
   const f = new FormData()
@@ -65,5 +66,36 @@ describe('admin actions', () => {
       where: { OR: [{ vehicleAId: 'v_1' }, { vehicleBId: 'v_1' }] },
     })
     expect(prisma.$transaction).toHaveBeenCalledWith(['deleteComparisons', 'deleteVehicle'])
+  })
+
+  it('assigns a studio model to a vehicle and records who did it', async () => {
+    asAdmin()
+    await setVehicleModel(form({ vehicleId: 'v_1', choice: 'bmw-m4-g82' }))
+    const data = { assetId: 'bmw-m4-g82', updatedBy: 'admin_1' }
+    expect(prisma.vehicleModel.upsert).toHaveBeenCalledWith({ where: { vehicleId: 'v_1' }, create: { vehicleId: 'v_1', ...data }, update: data })
+  })
+
+  it('stores photos-only as a null asset', async () => {
+    asAdmin()
+    await setVehicleModel(form({ vehicleId: 'v_1', choice: 'none' }))
+    expect(prisma.vehicleModel.upsert).toHaveBeenCalledWith(expect.objectContaining({ update: { assetId: null, updatedBy: 'admin_1' } }))
+  })
+
+  it('deletes the assignment to return to automatic matching', async () => {
+    asAdmin()
+    await setVehicleModel(form({ vehicleId: 'v_1', choice: 'auto' }))
+    expect(prisma.vehicleModel.deleteMany).toHaveBeenCalledWith({ where: { vehicleId: 'v_1' } })
+    expect(prisma.vehicleModel.upsert).not.toHaveBeenCalled()
+  })
+
+  it('rejects a model that is not a studio model', async () => {
+    asAdmin()
+    await expect(setVehicleModel(form({ vehicleId: 'v_1', choice: 'toyota-camry' }))).rejects.toThrow('Unknown studio model')
+    expect(prisma.vehicleModel.upsert).not.toHaveBeenCalled()
+  })
+
+  it('throws Forbidden for a non-admin assignment', async () => {
+    getServerSession.mockResolvedValue({ user: { id: 'u_1', isAdmin: false } })
+    await expect(setVehicleModel(form({ vehicleId: 'v_1', choice: 'none' }))).rejects.toThrow('Forbidden')
   })
 })
