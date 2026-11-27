@@ -3,7 +3,10 @@ import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { ADMIN_PAGE_SIZE, parsePage, requireAdmin } from '@/lib/admin'
 
+import { resolveStudioModel } from '@/lib/model-registry'
+
 import { deleteVehicle } from '../actions'
+import { ModelAssignmentForm } from '../_components/ModelAssignmentForm'
 import { ConfirmButton } from '../_components/ConfirmButton'
 import { DANGER_BTN, Pagination, SearchForm, TD, TH } from '../_components/ListControls'
 
@@ -41,6 +44,7 @@ export default async function AdminVehiclesPage({ searchParams }: Props) {
         year: true,
         slug: true,
         engine: { select: { id: true } },
+        modelAssignment: { select: { assetId: true } },
         _count: { select: { media: true, comparisonsA: true, comparisonsB: true } },
       },
     }),
@@ -60,6 +64,7 @@ export default async function AdminVehiclesPage({ searchParams }: Props) {
               <th className={TH}>Vehicle</th>
               <th className={TH}>Slug</th>
               <th className={TH}>Specs</th>
+              <th className={TH}>3D model</th>
               <th className={TH}>Media</th>
               <th className={TH}>Comparisons</th>
               <th className={TH} />
@@ -76,6 +81,13 @@ export default async function AdminVehiclesPage({ searchParams }: Props) {
                   </td>
                   <td className={`${TD} font-mono text-xs text-gray-400`}>{v.slug}</td>
                   <td className={TD}>{v.engine ? 'Engine' : <span className="text-gray-500">Missing</span>}</td>
+                  <td className={TD}>
+                    <ModelAssignmentForm
+                      vehicleId={v.id}
+                      assignment={v.modelAssignment}
+                      resolvedId={resolveStudioModel(v, v.modelAssignment)?.id ?? null}
+                    />
+                  </td>
                   <td className={TD}>{v._count.media}</td>
                   <td className={TD}>{comparisons}</td>
                   <td className={`${TD} text-right`}>

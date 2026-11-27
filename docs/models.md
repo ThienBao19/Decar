@@ -104,6 +104,15 @@ Checked by eye in the four snapshots:
 - [ ] Paint reads as clear-coated: sharp reflections, no blotchy or faceted highlights
 - [ ] No holes, flipped faces, floating parts, or z-fighting
 
+## Which vehicles show a model
+
+A vehicle shows a studio model when its make and model match an alias in `match` and its
+year is within `years`. An admin can override that per vehicle on **Admin → Vehicles**
+(the `VehicleModel` table): pick a studio model for any year (a trim the aliases miss, a
+facelift year outside the range), or "Photos only". "Automatic" removes the override.
+**Admin → 3D models** shows coverage by make and model, with the model years that have a
+studio model in green; use it to decide which generation to add next.
+
 ## Studio environments
 
 `env.json` takes an optional `softenAbove` luminance. Light sources brighter than it are averaged over themselves during the build, so a softbox's honeycomb grid doesn't show up as stripes on glossy paint; dimmer areas are untouched. Pick a value above the brightest wall (about 1.7 in `studio-small-09`) and below the lamps. Changing the algorithm in `scripts/models/hdr.mjs` must bump `ENV_PIPELINE_VERSION` in `lib.mjs`.
