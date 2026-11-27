@@ -7,10 +7,11 @@ import type { Redis } from 'ioredis'
 
 vi.mock('../../services/vehicle.service.js', () => ({
   getVehicle: vi.fn(),
-  listVehicles: vi.fn(),
 }))
 
-vi.mock('../../services/search.service.js', () => ({
+// Real parseSearchParams, so the test covers what the route hands to the service
+vi.mock('../../services/search.service.js', async () => ({
+  ...(await vi.importActual<Record<string, unknown>>('../../services/search.service.js')),
   searchVehicles: vi.fn(),
 }))
 
@@ -18,11 +19,7 @@ vi.mock('../../services/media.service.js', () => ({
   getVehicleMedia: vi.fn(),
 }))
 
-vi.mock('@elastic/elasticsearch', () => ({
-  Client: vi.fn().mockImplementation(() => ({})),
-}))
-
-const { getVehicle, listVehicles } = await import('../../services/vehicle.service.js')
+const { getVehicle } = await import('../../services/vehicle.service.js')
 const { searchVehicles }           = await import('../../services/search.service.js')
 const { getVehicleMedia }          = await import('../../services/media.service.js')
 const { vehicleRoutes }            = await import('./index.js')
@@ -59,7 +56,7 @@ function buildApp() {
 describe('GET /vehicles', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('should return search results from Elasticsearch', async () => {
+  it('should return search results', async () => {
     vi.mocked(searchVehicles).mockResolvedValue(SEARCH_RESULT)
     const { app } = buildApp()
     await app.ready()
@@ -72,30 +69,16 @@ describe('GET /vehicles', () => {
     expect(body.total).toBe(1)
   })
 
-  it('should fall back to DB list when Elasticsearch throws', async () => {
-    vi.mocked(searchVehicles).mockRejectedValue(new Error('ES unavailable'))
-    vi.mocked(listVehicles).mockResolvedValue({ data: SEARCH_RESULT.data, total: 1 })
-    const { app } = buildApp()
-    await app.ready()
-
-    const res = await app.inject({ method: 'GET', url: '/vehicles?make=Toyota' })
-
-    expect(res.statusCode).toBe(200)
-    expect(listVehicles).toHaveBeenCalled()
-  })
-
-  it('should pass query filters to searchVehicles', async () => {
+  it('should pass parsed query filters to searchVehicles', async () => {
     vi.mocked(searchVehicles).mockResolvedValue(SEARCH_RESULT)
     const { app } = buildApp()
     await app.ready()
 
-    await app.inject({ method: 'GET', url: '/vehicles?make=Toyota&model=Camry&year=2024&fuelType=PETROL' })
+    await app.inject({ method: 'GET', url: '/vehicles?make=Toyota&model=Camry&year=2024&fuelType=PETROL&limit=500' })
 
-    const call = vi.mocked(searchVehicles).mock.calls[0]![2]
-    expect(call.make).toBe('Toyota')
-    expect(call.model).toBe('Camry')
-    expect(call.year).toBe(2024)
-    expect(call.fuelType).toBe('PETROL')
+    expect(vi.mocked(searchVehicles).mock.calls[0]![2]).toEqual({
+      make: 'Toyota', model: 'Camry', year: 2024, fuelType: 'PETROL', page: 1, limit: 100,
+    })
   })
 })
 

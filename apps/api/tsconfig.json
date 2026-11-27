@@ -8,6 +8,6 @@
     "sourceMap": true,
     "declaration": true
   },
-  "include": ["src", "prisma/seed.ts", "scripts"],
+  "include": ["src", "prisma/seed.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -8,7 +8,7 @@ A production-ready SaaS platform delivering detailed vehicle data, interactive 3
 
 **Free tier**
 - Browse vehicle specs (body dimensions, transmission, drivetrain, fuel type)
-- Search vehicles powered by Elasticsearch (falls back to Prisma `ILIKE`)
+- Vehicle search on PostgreSQL (case-insensitive make, model, year, fuel, body, market filters)
 - 1 saved comparison
 - Photoreal 3D studio for models that meet the realism bar (`docs/models.md`)
 - Vehicle Builder + Drive Simulator
@@ -35,7 +35,7 @@ decar/
 │   └── api/          # Fastify 4 REST API      (Vercel)
 ├── packages/
 │   └── shared/       # Shared TypeScript DTOs
-├── scripts/          # DB seed, ES indexer, Blender exports
+├── scripts/          # DB seed, model pipeline, Blender exports
 └── turbo.json
 ```
 
@@ -59,7 +59,7 @@ decar/
 | Framework | Fastify 4 |
 | ORM | Prisma 5 (PostgreSQL via Supabase) |
 | Cache | Redis (ioredis) — tier cache TTL 5 min |
-| Search | Elasticsearch 8 |
+| Search | PostgreSQL via Prisma (results cached in Redis 5 min) |
 | Payments | Stripe (checkout · portal · webhooks) |
 | Storage | AWS S3 / Cloudflare R2 — presigned URLs (15 min TTL) |
 | Auth | fastify-jwt + NextAuth API_INTERNAL_SECRET exchange |
@@ -96,7 +96,6 @@ Vehicle ──── Engine
 - pnpm 9+
 - Docker (runs the local PostgreSQL on port 5434)
 - Redis *(optional — caching is skipped without it)*
-- Elasticsearch 8 *(optional — falls back to DB search)*
 
 ### 1. Clone & install
 
@@ -133,7 +132,6 @@ Key variables:
 | `AWS_SECRET_ACCESS_KEY` | S3 / R2 credentials |
 | `S3_BUCKET` | Bucket name |
 | `CLOUDFLARE_R2_ENDPOINT` | Endpoint URL (set for R2) |
-| `ELASTICSEARCH_URL` | ES node URL *(optional)* |
 
 ### 3. Start and seed the local database
 
@@ -144,14 +142,7 @@ pnpm db:setup   # apply migrations, seed sample vehicles
 
 Keep local `.env` files on this database. Pointing them at production means every local page view, test and seed writes to real data. Admin access is the `isAdmin` flag on a user; set it in `pnpm --filter @decar/api db:studio`.
 
-### 4. Index vehicles into Elasticsearch *(optional)*
-
-```bash
-cd apps/api
-pnpm tsx scripts/index-vehicles.ts
-```
-
-### 5. Start development servers
+### 4. Start development servers
 
 ```bash
 # from monorepo root — starts both web + api concurrently
@@ -218,7 +209,7 @@ Set all environment variables in each platform's dashboard before the first depl
 | `WEB_URL`, `ALLOWED_ORIGIN` | the web app's production URL |
 | `AWS_*`, `S3_BUCKET`, `CLOUDFLARE_R2_ENDPOINT` | only if media storage is used |
 
-   Leave `ELASTICSEARCH_URL`, `REDIS_URL` and `PORT` unset; search falls back to Postgres and caching is skipped.
+   Leave `REDIS_URL` and `PORT` unset; caching is then skipped.
 3. Check `https://<api-domain>/health` returns `{"status":"ok"}`.
 4. In the **web** project set `API_URL=https://<api-domain>` and `API_INTERNAL_SECRET`, then redeploy it.
 5. Stripe Dashboard → Webhooks → `https://<api-domain>/subscriptions/webhook`, events `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`; put its signing secret in `STRIPE_WEBHOOK_SECRET`.
